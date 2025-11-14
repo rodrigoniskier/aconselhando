@@ -1,0 +1,21 @@
+{
+  "short_name": "Aconselhando",
+  "name": "Aconselhamento Bíblico",
+  "description": "Uma plataforma de treinamento para aconselhamento bíblico com simulações de IA.",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#0284c7",
+  "background_color": "#f1f5f9"
+}
