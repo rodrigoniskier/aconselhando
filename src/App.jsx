@@ -599,7 +599,7 @@ const handleRequestEvaluation = () => {
         {chatHistory.map((msg, index) => (
           <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div
-              className={`max-w-xs md:max-w-2xl p-4 rounded-xl shadow-md ${
+              className={`p-4 rounded-xl shadow-md ${
                 msg.role === 'user'
                   ? 'bg-blue-600 text-white'
                   // --- CORREÇÃO DO ERRO DE DIGITAÇÃO ---
