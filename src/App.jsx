@@ -383,7 +383,7 @@ function ChatScreen({ selectedCase, onEndSession }) {
       },
       generationConfig: {
         temperature: 0.5, // Mais focado para helpers
-        maxOutputTokens: 1024,
+        maxOutputTokens: 2048,
       },
     };
     // --- FIM DA CORREÇÃO ---
