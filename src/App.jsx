@@ -120,7 +120,7 @@ const COUNSELING_CASES = [
       - Você nega tudo veementemente. Você se faz de vítima: "Eu só estava tentando ajudar", "As pessoas são muito sensíveis hoje em dia".
       - Você usa sua antiguidade na igreja como escudo.
       - Você tentará desviar a conversa para os pecados dos *outros* ou para como *você* está sendo perseguida.
-      - Você é altamente reticente em admitir qualquer falha pessoal.
+      - Você é highly reticente em admitir qualquer falha pessoal.
     `
   }
 ];
@@ -189,6 +189,88 @@ function HomeScreen({ onStart }) {
     </div>
   );
 }
+
+/**
+ * Tela de Menu com os Casos (O COMPONENTE QUE FALTAVA)
+ */
+function MenuScreen({ onCaseSelect }) {
+  return (
+    <div className="min-h-screen bg-slate-100 p-8 md:p-12">
+      <h1 className="text-4xl font-bold text-slate-800 text-center mb-4">
+        Selecione um Cenário
+      </h1>
+      <p className="text-lg text-slate-600 text-center mb-12 max-w-2xl mx-auto">
+        Escolha um dos casos simulados abaixo para iniciar uma sessão de aconselhamento. A IA assumirá a persona do aconselhando.
+      </p>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
+        {COUNSELING_CASES.map((caseItem) => (
+          <div
+            key={caseItem.id}
+            className="bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden transition-all duration-300 hover:shadow-2xl flex flex-col"
+          >
+            <div className="p-8 flex-grow">
+              <h2 className="text-2xl font-bold text-blue-800 mb-3">
+                {caseItem.title}
+              </h2>
+              <p className="text-slate-700 text-base leading-relaxed">
+                {caseItem.description}
+              </p>
+            </div>
+            <div className="bg-slate-50 p-6">
+              <button
+                onClick={() => onCaseSelect(caseItem)}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-blue-300"
+              >
+                Iniciar Sessão
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Modal para exibir respostas dos helpers (O OUTRO COMPONENTE QUE FALTAVA)
+ */
+function HelperModal({ content, onClose, isLoading }) {
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4 font-sans">
+      <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full transform transition-all scale-100 opacity-100">
+        <div className="p-5 border-b border-slate-200 flex justify-between items-center">
+          <h3 className="text-xl font-bold text-blue-800">✨ Assistente do Conselheiro</h3>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 text-3xl leading-none">&times;</button>
+        </div>
+        <div className="p-6 max-h-[60vh] overflow-y-auto">
+          {isLoading ? (
+            <div className="flex justify-center items-center h-32">
+              <div className="flex items-center space-x-2">
+                <div className="w-4 h-4 bg-blue-500 rounded-full animate-bounce" style={{animationDelay: '0s'}}></div>
+                <div className="w-4 h-4 bg-blue-500 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                <div className="w-4 h-4 bg-blue-500 rounded-full animate-bounce" style={{animationDelay: '0.4s'}}></div>
+              </div>
+            </div>
+          ) : (
+            <div
+              className="prose prose-sm prose-slate max-w-none"
+              dangerouslySetInnerHTML={{ __html: content.replace(/\n/g, '<br />') }}
+            />
+          )}
+        </div>
+        <div className="p-4 bg-slate-50 border-t border-slate-200 text-right rounded-b-xl">
+          <button 
+            onClick={onClose} 
+            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-blue-300"
+          >
+            Fechar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 
 /**
  * Tela de Chat de Aconselhamento
@@ -302,7 +384,8 @@ function ChatScreen({ selectedCase, onEndSession }) {
       } else {
         throw new Error("Resposta da API inválida.");
       }
-    } catch (error) {
+    } catch (error)
+ {
       // console.error("Erro ao chamar o helper da API:", error);
       setHelperContent("Desculpe, ocorreu um erro ao buscar sua assistência: " + error.message);
     } 
