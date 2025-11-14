@@ -132,8 +132,8 @@ const COUNSELING_CASES = [
  */
 function HomeScreen({ onStart }) {
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-slate-900 text-white p-8 font-sans">
-      <div className="max-w-3xl text-center">
+    <div className="flex flex-col justify-center min-h-screen bg-slate-900 text-white p-8 font-sans">
+      <div className="text-center">
         <h1 className="text-4xl md:text-5xl font-bold mb-6 font-serif tracking-tight">
           Plataforma de Treinamento em Aconselhamento Bíblico
         </h1>
@@ -199,10 +199,10 @@ function MenuScreen({ onCaseSelect }) {
       <h1 className="text-4xl font-bold text-slate-800 text-center mb-4">
         Selecione um Cenário
       </h1>
-      <p className="text-lg text-slate-600 text-center mb-12 max-w-2xl mx-auto">
+      <p className="text-lg text-slate-600 text-center mb-12 mx-auto">
         Escolha um dos casos simulados abaixo para iniciar uma sessão de aconselhamento. A IA assumirá a persona do aconselhando.
       </p>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8 mx-auto">
         {COUNSELING_CASES.map((caseItem) => (
           <div
             key={caseItem.id}
@@ -383,7 +383,7 @@ function ChatScreen({ selectedCase, onEndSession }) {
       },
       generationConfig: {
         temperature: 0.5, // Mais focado para helpers
-        maxOutputTokens: 2048,
+        maxOutputTokens: 2048, // <-- CORREÇÃO DA SESSÃO ANTERIOR (AUMENTADO DE 1024)
       },
     };
     // --- FIM DA CORREÇÃO ---
