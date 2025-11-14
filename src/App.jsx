@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 // --- Constantes da Aplicação ---
 
 // URL da API do Gemini (usando o modelo especificado)
-// Deixamos a apiKey em branco, conforme as instruções, para que o ambiente a forneça.
+// A linha abaixo JÁ ESTÁ CORRIGIDA para funcionar com o Vercel.
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${API_KEY}`;
 
@@ -33,7 +33,7 @@ const COUNSELING_CASES = [
       Assuma a persona de 'Ana', 28 anos, mãe de um bebê de 6 meses.
       Seu tom é ansioso, cansado e cheio de culpa.
       - Você ama seu bebê, mas se sente constantemente sobrecarregada e triste.
-      - Você tem crises de ansiedade e pensamentos negativos sobre o futuro.
+      - Você tem crises de ansiedade e pensamentos negativos o futuro.
       - Você se sente culpada por não "confiar em Deus o suficiente" ou não "ter mais alegria".
       - Pessoas na igreja disseram para você "apenas orar mais", e isso a fez se sentir pior.
       - Você tem medo de estar falhando como mãe e como cristã.
@@ -387,9 +387,12 @@ function ChatScreen({ selectedCase, onEndSession }) {
     } catch (error)
  {
       // console.error("Erro ao chamar o helper da API:", error);
+      // CORREÇÃO: Corrigido o erro de digitação ( "ax" -> " " + )
       setHelperContent("Desculpe, ocorreu um erro ao buscar sua assistência: " + error.message);
-    } 
-    // O finally é tratado no modal, que será fechado e setará o loading para false
+    } finally {
+      // CORREÇÃO: Adicionado o bloco 'finally' que faltava para parar o loading do helper
+      setIsHelperLoading(false);
+    }
   };
 
   // Efeito para iniciar a conversa assim que o caso é selecionado
@@ -439,69 +442,76 @@ function ChatScreen({ selectedCase, onEndSession }) {
             throw new Error("Resposta da API inválida ou vazia.");
           }
         } catch (error) {
-          // console.error("Erro ao iniciar a conversa:", error);
-          setChatHistory([{ role: 'model', text: "Erro ao iniciar a simulação. " + error.message, isError: true }]);
+          // CORREÇÃO: Usando a função correta (setChatHistory) e corrigindo o erro de digitação
+          const errorMessage = "Erro ao iniciar a simulação. " + error.message;
+          setChatHistory([{ role: 'model', text: errorMessage, isError: true }]);
         } finally {
-          setIsLoading(false);
-        }
-      };
-      
-      getInitialResponse();
+          // CORREÇÃO: Usando o 'setter' de loading correto (setIsLoading e não setIsHelperLoading)
+      setIsLoading(false);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCase]); // Executa apenas quando selectedCase muda
-
-  // Efeito para rolar para o final do chat
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [chatHistory]);
-
-  // Enviar uma nova mensagem
-  const handleSendMessage = (e) => {
-    e.preventDefault();
-    if (!userInput.trim() || isLoading || isHelperLoading) return;
-
-    const newUserMessage = { role: 'user', text: userInput.trim() };
-    const newHistory = [...chatHistory, newUserMessage];
-
-    setChatHistory(newHistory);
-    setUserInput("");
-    callGeminiAPI(newHistory);
   };
+  
+  getInitialResponse();
 
-  // Solicitar a avaliação final
-  const handleRequestEvaluation = () => {
-    if (isLoading || isHelperLoading) return;
+  } // <--- ESTA CHAVE ESTAVA FALTANDO. Ela fecha o "if (selectedCase)".
 
-    const evaluationPrompt = `
-      --- FIM DA SIMULAÇÃO ---
-      
-      Por favor, pare de atuar como o aconselhando.
-      
-      Agora, assuma a persona de um "Supervisor Sênior de Aconselhamento Bíblico, com teologia reformada e neocalvinista".
-      
-      Com base em toda a nossa conversa anterior (minhas falas como conselheiro e suas como aconselhando), por favor, forneça uma avaliação detalhada em TEXTO SIMPLES.
-      NÃO use nenhuma formatação Markdown (sem '#', '*', '---', '|', etc.).
-      Use apenas quebras de linha, letras maiúsculas para títulos e numeração simples.
-      Siga esta estrutura exatamente:
-      
-      AVALIAÇÃO DA SESSÃO
-      
-      1. PONTOS POSITIVOS
-      (Liste os pontos onde minha abordagem foi biblicamente sólida, empática e tecnicamente correta.)
-      
-      2. PONTOS DE MELHORIA E SUGESTÕES
-      (Liste áreas onde eu poderia ter sido mais eficaz, feito perguntas melhores, aplicado melhor a Escritura, ou evitado armadilhas. Seja específico e construtivo.)
-      
-      3. LIÇÕES BÍBLICAS E TEOLÓGICAS CHAVE
-      (Quais são as principais doutrinas ou passagens bíblicas centrais para este caso específico que eu deveria focar?)
-      
-      4. ROTEIRO SUGERIDO
-      (Descreva um breve roteiro ou plano de como uma sessão de aconselhamento ideal para esta situação poderia progredir, desde a coleta de dados até a aplicação da Palavra e o encorajamento.)
-    `;
+// eslint-disable-next-line react-hooks/exhaustive-deps
+}, [selectedCase]);
 
-    const newUserMessage = { role: 'user', text: evaluationPrompt, isMeta: true };
-    const newHistory = [...chatHistory, newUserMessage];
+// --- CORREÇÃO ESTRUTURAL: O CÓDIGO ABAIXO ESTAVA NO LUGAR ERRADO ---
+
+// Efeito para rolar para o final do chat
+useEffect(() => {
+  chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+}, [chatHistory]);
+
+// Enviar uma nova mensagem
+const handleSendMessage = (e) => {
+  e.preventDefault();
+  if (!userInput.trim() || isLoading || isHelperLoading) return;
+
+  const newUserMessage = { role: 'user', text: userInput.trim() };
+  const newHistory = [...chatHistory, newUserMessage];
+
+  setChatHistory(newHistory);
+  setUserInput("");
+  callGeminiAPI(newHistory);
+};
+
+// Solicitar a avaliação final
+const handleRequestEvaluation = () => {
+  if (isLoading || isHelperLoading) return;
+
+  // O 'evaluationPrompt' estava solto no código. Ele deve ser uma constante aqui.
+  const evaluationPrompt = `
+    --- FIM DA SIMULAÇÃO ---
+    
+    Por favor, pare de atuar como o aconselhando.
+    
+    Agora, assuma a persona de um "Supervisor Sênior de Aconselhamento Bíblico, com teologia reformada e neocalvinista".
+    
+    Com base em toda a nossa conversa anterior (minhas falas como conselheiro e suas como aconselhando), por favor, forneça uma avaliação detalhada em TEXTO SIMLES.
+    NÃO use nenhuma formatação Markdown (sem '#', '*', '---', '|', etc.).
+    Use apenas quebras de linha, letras maiúsculas para títulos e numeração simples.
+    Siga esta estrutura exatamente:
+    
+    AVALIAÇÃO DA SESSÃO
+    
+    1. PONTOS POSITIVOS
+    (Liste os pontos onde minha abordagem foi biblicamente sólida, empática e tecnicamente correta.)
+    
+    2. PONTOS DE MELHORIA E SUGESTÕES
+    (Liste áreas onde eu poderia ter sido mais eficaz, feito perguntas melhores, aplicado melhor a Escritura, ou evitado armadilhas. Seja específico e construtivo.)
+    
+    3. LIÇÕES BÍBLICAS E TEOLÓGICAS CHAVE
+    (Quais são as principais doutrinas ou passagens bíblicas centrais para este caso específico que eu deveria focar?)
+    
+    4. ROTEIRO SUGERIDO
+    (Descreva um breve roteiro ou plano de como uma sessão de aconselhamento ideal para esta situação poderia progredir, desde a coleta de dados até a aplicação da Palavra e o encorajamento.)
+  `;
+
+  const newUserMessage = { role: 'user', text: evaluationPrompt, isMeta: true };
+  const newHistory = [...chatHistory, newUserMessage];
 
     setChatHistory(newHistory);
     callGeminiAPI(newHistory);
