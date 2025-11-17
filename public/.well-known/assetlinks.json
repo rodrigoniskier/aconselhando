@@ -1,0 +1,15 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls",
+      "delegate_permission/common.get_login_creds"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "app.vercel.aconselhando.twa",
+      "sha256_cert_fingerprints": [
+        "5C:6C:ED:CA:79:0C:6A:C2:69:5D:D7:49:0A:6F:CA:D5:2D:EE:5A:9D:2B:5E:50:BD:AC:73:25:5E:B7:C9:DA:13"
+      ]
+    }
+  }
+]
