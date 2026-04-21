@@ -5,7 +5,7 @@ import React, { useState, useEffect, useRef } from 'react';
 // URL da API do Gemini (usando o modelo especificado)
 // A linha abaixo JÁ ESTÁ CORRIGIDA para funcionar com o Vercel.
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash:generateContent?key=${API_KEY}`;
+const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${API_KEY}`;
 
 // Definição dos casos de aconselhamento
 const COUNSELING_CASES = [
