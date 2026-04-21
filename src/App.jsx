@@ -5,7 +5,7 @@ import React, { useState, useEffect, useRef } from 'react';
 // URL da API do Gemini (usando o modelo especificado)
 // A linha abaixo JÁ ESTÁ CORRIGIDA para funcionar com o Vercel.
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${API_KEY}`;
+const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash:generateContent?key=${API_KEY}`;
 
 // Definição dos casos de aconselhamento
 const COUNSELING_CASES = [
@@ -287,26 +287,35 @@ function ChatScreen({ selectedCase, onEndSession }) {
 
   // Função para chamar a API do Gemini com retentativa
   async function fetchWithRetry(url, options, retries = 3, delay = 1000) {
-    for (let i = 0; i < retries; i++) {
-      try {
-        const response = await fetch(url, options);
-        if (response.ok) {
-          return await response.json();
-        }
-        if (response.status === 429) { // Too Many Requests
-          // console.warn(`Retrying request (attempt ${i + 1}/${retries}) due to 429...`);
-          await new Promise(res => setTimeout(res, delay * (2 ** i))); // Exponential backoff
-        } else {
-          const errorText = await response.text();
-          throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
-        }
-      } catch (error) {
-        // console.error(`Fetch error (attempt ${i + 1}/${retries}):`, error.message);
-        if (i === retries - 1) throw error;
-        await new Promise(res => setTimeout(res, delay * (2 ** i)));
+  let lastResponse;
+  for (let i = 0; i < retries; i++) {
+    try {
+      const response = await fetch(url, options);
+      lastResponse = response;
+      
+      if (response.ok) {
+        return await response.json();
       }
+
+      if (response.status === 429) {
+        // Se for a última tentativa, não espera, lança o erro logo abaixo
+        if (i < retries - 1) {
+          await new Promise(res => setTimeout(res, delay * (2 ** i)));
+          continue; 
+        }
+      } 
+      
+      const errorText = await response.text();
+      throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+      
+    } catch (error) {
+      if (i === retries - 1) throw error;
+      await new Promise(res => setTimeout(res, delay * (2 ** i)));
     }
   }
+  // Garantia caso saia do loop sem retorno (como em 429 persistente)
+  throw new Error(`Falha após ${retries} tentativas. Status: ${lastResponse?.status}`);
+}
 
   // Função genérica para chamar a API (para o chat principal)
   const callGeminiAPI = async (history) => {
