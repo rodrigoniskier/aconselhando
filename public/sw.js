@@ -1,5 +1,5 @@
 /* Define a nova versão do cache */
-const CACHE_NAME = 'aconselhando-v2';
+const CACHE_NAME = 'aconselhando-v3';
 
 /* Lista de arquivos essenciais */
 const urlsToCache = [
