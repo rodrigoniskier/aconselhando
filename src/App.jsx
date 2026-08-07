@@ -3,8 +3,10 @@ import HomeScreen from './components/HomeScreen';
 import MenuScreen from './components/MenuScreen';
 import ChatScreen from './components/ChatScreen';
 import OfflineBanner from './components/OfflineBanner';
+import WhatsNewModal from './components/WhatsNewModal';
 import { useScreenHistory } from './hooks/useScreenHistory';
 import { useOnlineStatus } from './hooks/useOnlineStatus';
+import { useWhatsNew } from './hooks/useWhatsNew';
 import { isGeminiConfigured } from './config/gemini';
 
 /**
@@ -14,6 +16,7 @@ export default function App() {
   const { screen, navigateTo, goBack } = useScreenHistory('home');
   const [selectedCase, setSelectedCase] = useState(null);
   const isOnline = useOnlineStatus();
+  const { visible: showWhatsNew, dismiss: dismissWhatsNew } = useWhatsNew();
 
   const handleStart = () => navigateTo('menu');
 
@@ -29,6 +32,7 @@ export default function App() {
 
   return (
     <>
+      {showWhatsNew && <WhatsNewModal onClose={dismissWhatsNew} />}
       {!isOnline && <OfflineBanner />}
       {!isGeminiConfigured && (
         <div role="alert" className="bg-amber-600 text-white text-center text-sm font-semibold py-2 px-4">
