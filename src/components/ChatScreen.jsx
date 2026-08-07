@@ -206,7 +206,7 @@ export default function ChatScreen({ selectedCase, isOnline, onEndSession }) {
                 <p className="italic font-semibold">[Solicitação de avaliação enviada...]</p>
               ) : (
                 <div
-                  className="prose prose-sm prose-blue"
+                  className="text-sm leading-relaxed"
                   dangerouslySetInnerHTML={{ __html: formatMessageHtml(msg.text) }}
                 />
               )}

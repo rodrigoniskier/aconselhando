@@ -28,7 +28,7 @@ export default function HelperModal({ content, onClose, isLoading }) {
             </div>
           ) : (
             <div
-              className="prose prose-sm prose-slate max-w-none"
+              className="text-slate-800 text-sm leading-relaxed"
               dangerouslySetInnerHTML={{ __html: formatMessageHtml(content) }}
             />
           )}

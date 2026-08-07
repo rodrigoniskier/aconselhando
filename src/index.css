@@ -1,7 +1,11 @@
 @import "tailwindcss";
 
 :root {
-  color-scheme: light dark;
+  /* O app usa uma paleta Tailwind fixa (sem tema escuro real); manter
+     "light dark" aqui faz o Android renderizar texto sem cor explícita em
+     branco (padrão de dark mode) sobre fundos brancos explícitos, o que
+     deixava as caixas de sugestão ilegíveis. */
+  color-scheme: light;
 }
 
 html,
