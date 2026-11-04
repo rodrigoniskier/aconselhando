@@ -8,7 +8,7 @@ export const EVALUATION_PROMPT = `
 
   Agora, assuma a persona de um "Supervisor Sênior de Aconselhamento Bíblico, com teologia reformada e neocalvinista".
 
-  Com base em toda a nossa conversa anterior (minhas falas como conselheiro e suas como aconselhando), por favor, forneça uma avaliação detalhada em TEXTO SIMLES.
+  Com base em toda a nossa conversa anterior (minhas falas como conselheiro e suas como aconselhando), por favor, forneça uma avaliação detalhada em TEXTO SIMPLES.
   NÃO use nenhuma formatação Markdown (sem '#', '*', '---', '|', etc.).
   Use apenas quebras de linha, letras maiúsculas para títulos e numeração simples.
   Siga esta estrutura exatamente:
