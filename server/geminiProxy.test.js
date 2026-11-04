@@ -154,6 +154,72 @@ describe('handleGeminiRequest: ajudante', () => {
   });
 });
 
+describe('handleGeminiRequest: modelo configurável e modelo reserva', () => {
+  const urlOf = (fetchImpl, n) => fetchImpl.mock.calls[n][0];
+
+  it('usa o modelo definido em GEMINI_MODEL', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(upstreamOk());
+    await call({ mode: 'chat', caseId, history }, { fetchImpl, env: { ...env, GEMINI_MODEL: 'modelo-novo' } });
+    expect(urlOf(fetchImpl, 0)).toContain('/models/modelo-novo:generateContent');
+  });
+
+  it.each([404, 500, 503])('usa o modelo reserva quando o principal responde %i', async (status) => {
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce(upstreamError(status))
+      .mockResolvedValueOnce(upstreamOk('Veio do reserva.'));
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    const result = await call(
+      { mode: 'chat', caseId, history },
+      { fetchImpl, env: { ...env, GEMINI_MODEL: 'principal', GEMINI_FALLBACK_MODEL: 'reserva' } },
+    );
+
+    expect(result.status).toBe(200);
+    expect(result.body.candidates[0].content.parts[0].text).toBe('Veio do reserva.');
+    expect(urlOf(fetchImpl, 0)).toContain('/models/principal:');
+    expect(urlOf(fetchImpl, 1)).toContain('/models/reserva:');
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('principal'));
+    warn.mockRestore();
+  });
+
+  it('usa o modelo reserva quando a rede com o principal falha', async () => {
+    const fetchImpl = vi
+      .fn()
+      .mockRejectedValueOnce(new TypeError('fetch failed'))
+      .mockResolvedValueOnce(upstreamOk());
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const result = await call({ mode: 'chat', caseId, history }, { fetchImpl });
+    expect(result.status).toBe(200);
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
+
+  it.each([400, 401, 403, 429])('não troca de modelo no erro %i', async (status) => {
+    const fetchImpl = vi.fn().mockResolvedValue(upstreamError(status));
+    const result = await call({ mode: 'chat', caseId, history }, { fetchImpl });
+    expect(result.status).toBe(status);
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
+  it('devolve o erro do modelo reserva se ele também falhar', async () => {
+    const fetchImpl = vi.fn().mockResolvedValueOnce(upstreamError(404)).mockResolvedValueOnce(upstreamError(503));
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const result = await call({ mode: 'chat', caseId, history }, { fetchImpl });
+    expect(result.status).toBe(503);
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
+
+  it('não tenta de novo quando o reserva é igual ao principal', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(upstreamError(404));
+    const result = await call(
+      { mode: 'chat', caseId, history },
+      { fetchImpl, env: { ...env, GEMINI_MODEL: 'mesmo', GEMINI_FALLBACK_MODEL: 'mesmo' } },
+    );
+    expect(result.status).toBe(404);
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe('handleGeminiRequest: erros do Google', () => {
   it.each([401, 403, 429, 503, 500])('repassa o status %i sem vazar o texto bruto como mensagem', async (status) => {
     const fetchImpl = vi.fn().mockResolvedValue(upstreamError(status, 'detalhe interno'));

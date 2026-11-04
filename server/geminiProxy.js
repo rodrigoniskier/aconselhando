@@ -7,6 +7,10 @@ import { MAX_HISTORY_MESSAGES, MAX_MESSAGE_CHARS } from '../src/config/limits.js
 import { HELPER_PROMPTS, buildHelperUserPrompt, buildPersonaPrompt } from '../src/config/prompts.js';
 
 const DEFAULT_MODEL = 'gemini-3.6-flash';
+// Alias do Google para o Flash mais recente; usado se o modelo principal sair do ar.
+const DEFAULT_FALLBACK_MODEL = 'gemini-flash-latest';
+// Só falhas do modelo (não do pedido, da chave ou da cota) justificam trocar de modelo.
+const FALLBACK_STATUS = new Set([404, 500, 503]);
 const DEFAULT_API_BASE = 'https://generativelanguage.googleapis.com/v1beta';
 
 const ROLES = new Set(['user', 'model']);
@@ -67,25 +71,33 @@ export async function handleGeminiRequest({ method, body, env, fetchImpl = fetch
   if (parsed.error) return badRequest(parsed.error);
 
   const model = env.GEMINI_MODEL || DEFAULT_MODEL;
+  const fallbackModel = env.GEMINI_FALLBACK_MODEL || DEFAULT_FALLBACK_MODEL;
   const base = env.GEMINI_API_BASE || DEFAULT_API_BASE;
+  const payload = JSON.stringify(buildPayload(parsed.value));
 
-  let upstream;
-  try {
-    upstream = await fetchImpl(`${base}/models/${model}:generateContent`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
-      body: JSON.stringify(buildPayload(parsed.value)),
-    });
-  } catch (error) {
-    console.error('Falha de rede ao chamar o Gemini:', error.message);
-    return reply(503, { error: 'upstream', message: 'Serviço de IA inacessível.' });
+  const callModel = async (name) => {
+    try {
+      const response = await fetchImpl(`${base}/models/${name}:generateContent`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+        body: payload,
+      });
+      if (response.ok) return { status: 200, response };
+      const detail = (await response.text()).slice(0, 500);
+      console.error(`Gemini (${name}) respondeu ${response.status}:`, detail);
+      return { status: response.status, detail };
+    } catch (error) {
+      console.error(`Falha de rede ao chamar o Gemini (${name}):`, error.message);
+      return { status: 503, detail: 'Serviço de IA inacessível.' };
+    }
+  };
+
+  let outcome = await callModel(model);
+  if (FALLBACK_STATUS.has(outcome.status) && fallbackModel !== model) {
+    console.warn(`Modelo ${model} falhou (${outcome.status}); usando o modelo reserva ${fallbackModel}.`);
+    outcome = await callModel(fallbackModel);
   }
 
-  if (!upstream.ok) {
-    const detail = (await upstream.text()).slice(0, 500);
-    console.error(`Gemini respondeu ${upstream.status}:`, detail);
-    return reply(upstream.status, { error: 'upstream', detail });
-  }
-
-  return reply(200, await upstream.json());
+  if (outcome.status !== 200) return reply(outcome.status, { error: 'upstream', detail: outcome.detail });
+  return reply(200, await outcome.response.json());
 }
