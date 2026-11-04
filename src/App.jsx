@@ -4,9 +4,11 @@ import MenuScreen from './components/MenuScreen';
 import ChatScreen from './components/ChatScreen';
 import OfflineBanner from './components/OfflineBanner';
 import WhatsNewModal from './components/WhatsNewModal';
+import UpdateBanner from './components/UpdateBanner';
 import { useScreenHistory } from './hooks/useScreenHistory';
 import { useOnlineStatus } from './hooks/useOnlineStatus';
 import { useWhatsNew } from './hooks/useWhatsNew';
+import { useServiceWorkerUpdate } from './hooks/useServiceWorkerUpdate';
 
 /**
  * Componente Principal da Aplicação
@@ -16,6 +18,7 @@ export default function App() {
   const [selectedCase, setSelectedCase] = useState(null);
   const isOnline = useOnlineStatus();
   const { visible: showWhatsNew, dismiss: dismissWhatsNew } = useWhatsNew();
+  const { updateAvailable, applyUpdate, dismissUpdate } = useServiceWorkerUpdate();
 
   const handleStart = () => navigateTo('menu');
 
@@ -33,6 +36,7 @@ export default function App() {
     <>
       {showWhatsNew && <WhatsNewModal onClose={dismissWhatsNew} />}
       {!isOnline && <OfflineBanner />}
+      {updateAvailable && <UpdateBanner onUpdate={applyUpdate} onDismiss={dismissUpdate} />}
       {reloadNotice && screen === 'menu' && (
         <div role="status" className="bg-blue-100 text-blue-900 text-center text-sm font-semibold py-2 px-4">
           A página foi recarregada e a sessão anterior não é salva. Escolha um caso para recomeçar.{' '}

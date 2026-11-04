@@ -27,8 +27,13 @@ export default defineConfig([
     },
   },
   {
+    // Service Worker: roda em um worker do navegador; o marcador é preenchido no build.
+    files: ['public/sw.js'],
+    languageOptions: { globals: { ...globals.serviceworker, __PRECACHE_URLS__: 'readonly' } },
+  },
+  {
     // Código que roda no servidor (Node), não no navegador.
-    files: ['api/**/*.js', 'server/**/*.js', 'vite.config.js'],
+    files: ['api/**/*.js', 'server/**/*.js', 'scripts/**/*.js', 'vite.config.js'],
     languageOptions: { globals: globals.node },
   },
 ])

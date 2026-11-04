@@ -1,68 +1,58 @@
-/* Define a nova versão do cache */
-const CACHE_NAME = 'aconselhando-v4';
+/* Service Worker do Aconselhando.
+ * Os marcadores de build abaixo (versão e lista de arquivos) são preenchidos no build
+ * por scripts/serviceWorkerBuild.js: o cache muda de nome sozinho a cada versão e já
+ * guarda todos os arquivos do app. */
+const CACHE_NAME = 'aconselhando-__BUILD_ID__';
+const PRECACHE_URLS = __PRECACHE_URLS__;
 
-/* Lista de arquivos essenciais */
-const urlsToCache = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/icon-192.png',
-  '/icon-512.png'
-];
-
-/* 1. Evento de Instalação: Salva arquivos e força ativação */
+/* Instalação: guarda os arquivos do app. A nova versão fica ESPERANDO até o usuário
+ * aceitar a atualização (mensagem SKIP_WAITING), para não recarregar no meio de uma sessão. */
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => {
-        console.log('Novo cache aberto:', CACHE_NAME);
-        return cache.addAll(urlsToCache);
-      })
-  );
-  // Força o Service Worker a se tornar o ativo imediatamente
-  self.skipWaiting();
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE_URLS)));
 });
 
-/* 2. Evento de Ativação: Limpa caches antigos e assume controle das abas */
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
+});
+
+/* Ativação: apaga caches de versões antigas e assume as abas abertas. */
 self.addEventListener('activate', (event) => {
-  const cacheWhitelist = [CACHE_NAME];
   event.waitUntil(
-    Promise.all([
-      // Remove versões antigas de cache (ex: v1)
-      caches.keys().then((cacheNames) => {
-        return Promise.all(
-          cacheNames.map((cacheName) => {
-            if (cacheWhitelist.indexOf(cacheName) === -1) {
-              console.log('Removendo cache antigo:', cacheName);
-              return caches.delete(cacheName);
-            }
-          })
-        );
-      }),
-      // Faz o Service Worker assumir o controle das páginas abertas na hora
-      self.clients.claim()
-    ])
+    caches
+      .keys()
+      .then((names) => Promise.all(names.filter((name) => name !== CACHE_NAME).map((name) => caches.delete(name))))
+      .then(() => self.clients.claim()),
   );
 });
 
-/* 3. Evento de Fetch: Estratégia de Rede Primeiro (Network First) */
-/* Isso garante que o usuário sempre baixe o App.jsx mais novo se houver internet */
+/* Busca: rede primeiro; sem rede, usa o cache. Só trata arquivos do próprio app (GET).
+ * Chamadas à IA (/api/) e qualquer outra coisa passam direto, sem cache. */
 self.addEventListener('fetch', (event) => {
+  const { request } = event;
+  const url = new URL(request.url);
+  const isAppFile = request.method === 'GET' && url.origin === self.location.origin && !url.pathname.startsWith('/api/');
+  if (!isAppFile) return;
+
   event.respondWith(
-    fetch(event.request)
-      .then((networkResponse) => {
-        // Se a rede responder, atualizamos o cache e retornamos o arquivo novo
-        if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
-          const responseToCache = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
+    fetch(request)
+      .then((response) => {
+        if (response.status === 200 && response.type === 'basic') {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
         }
-        return networkResponse;
+        return response;
       })
-      .catch(() => {
-        // Se estiver sem internet, busca no cache
-        return caches.match(event.request);
-      })
+      .catch(async () => {
+        const cached = await caches.match(request);
+        if (cached) return cached;
+        if (request.mode === 'navigate') {
+          const shell = await caches.match('/index.html');
+          if (shell) return shell;
+        }
+        return new Response('Sem conexão com a internet.', {
+          status: 503,
+          headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+        });
+      }),
   );
 });
