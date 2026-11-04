@@ -7,6 +7,7 @@ import {
   EVALUATION_PROMPT,
   FIND_VERSES_PROMPT,
   INITIAL_GREETING,
+  buildPersonaPrompt,
   SUGGEST_QUESTION_PROMPT,
 } from '../config/prompts';
 
@@ -47,7 +48,7 @@ export default function ChatScreen({ selectedCase, isOnline, onEndSession }) {
       const modelResponse = await sendChatTurn({
         // Mensagens de erro da tela nunca vão para a IA.
         history: history.filter((msg) => !msg.isError),
-        systemPrompt: selectedCase.systemPrompt,
+        systemPrompt: buildPersonaPrompt(selectedCase.systemPrompt),
         signal: controller.signal,
       });
       setChatHistory((prev) => [...prev, { role: 'model', text: modelResponse }]);
@@ -214,7 +215,7 @@ export default function ChatScreen({ selectedCase, isOnline, onEndSession }) {
       </header>
 
       <div className="bg-yellow-100 border-b-2 border-yellow-300 text-yellow-900 p-3 text-center font-semibold shadow-sm">
-        <span className="font-bold">ATENÇÃO:</span> Esta conversa não é salva automaticamente. Copie e cole qualquer interação que deseje guardar.
+        <span className="font-bold">ATENÇÃO:</span> Simulação de treinamento com personagem fictício. Esta conversa não é salva automaticamente: use "Copiar conversa" para guardar. Em caso de sofrimento real, ligue 188 (CVV, 24 horas).
       </div>
 
       <main className="flex-grow overflow-y-auto p-4 md:p-8 space-y-4">

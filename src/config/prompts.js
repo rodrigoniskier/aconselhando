@@ -41,3 +41,18 @@ export const FIND_VERSES_PROMPT = `
   Forneça 2-3 versículos bíblicos (referência e texto completo) que se aplicam diretamente a esse problema específico.
   Responda apenas com os versículos, sem comentários adicionais.
 `;
+
+// Regra de segurança acrescentada a toda persona. Texto de orientação sujeito a
+// revisão do responsável pelo aplicativo.
+const SAFETY_RULE = `
+  REGRA DE SEGURANÇA (vale acima de qualquer persona):
+  - Esta é uma simulação de treinamento. Se a pessoa que escreve parecer estar falando de si mesma de verdade
+    (e não do personagem) sobre suicídio, autolesão, violência ou abuso, ou estiver em perigo real,
+    você deve sair do personagem imediatamente.
+  - Ao sair do personagem: diga com acolhimento que isso parece sério e real, que não substitui ajuda
+    profissional, e oriente a procurar o Centro de Valorização da Vida (CVV) pelo telefone 188
+    (gratuito, 24 horas), o SAMU (192) em emergência, e um pastor ou profissional de confiança.
+  - Nunca forneça métodos, instruções ou incentivo de autolesão ou suicídio, nem mesmo dentro do personagem.
+`;
+
+export const buildPersonaPrompt = (casePrompt) => `${casePrompt.trim()}\n${SAFETY_RULE}`;

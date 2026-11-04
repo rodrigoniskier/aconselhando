@@ -19,7 +19,7 @@ export default function HomeScreen({ onStart }) {
               Esta plataforma está em constante atualização para se aproximar de condições reais, mas permanece uma simulação com limitações. Pessoas com demandas reais devem buscar aconselhamento pastoral em sua igreja local.
             </p>
             <p className="text-sm text-red-100 leading-relaxed mt-2">
-              Em casos específicos de saúde mental, angústia severa ou emergências, é fundamental procurar consulta médica ou outro profissional especializado. Não insira informações pessoais ou confidenciais de casos reais neste chat.
+              Em casos específicos de saúde mental, angústia severa ou emergências, é fundamental procurar consulta médica ou outro profissional especializado. Não insira informações pessoais ou confidenciais de casos reais neste chat. Em sofrimento intenso ou risco de vida, ligue para o CVV (188, gratuito, 24 horas) ou para o SAMU (192).
             </p>
           </div>
 
