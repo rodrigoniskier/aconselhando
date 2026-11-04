@@ -1,3 +1,6 @@
+import { MAX_HISTORY_MESSAGES } from '../config/limits';
+import { trimHistory } from '../utils/trimHistory';
+
 // Mensagens mostradas ao usuário, por tipo de problema. Detalhes técnicos ficam
 // em `detail` e no console, nunca na tela.
 const USER_MESSAGES = {
@@ -70,9 +73,13 @@ async function fetchWithRetry(url, options, retries = 3, delay = 1000) {
   throw new GeminiError('unknown', { detail: `Falha após ${retries} tentativas.` });
 }
 
+const TRUNCATED_NOTE = '\n\n[A resposta foi cortada por ser muito longa. Peça para continuar.]';
+
 function extractResponseText(result) {
   const text = result?.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (text) return text;
+  if (text) {
+    return result.candidates[0].finishReason === 'MAX_TOKENS' ? `${text}${TRUNCATED_NOTE}` : text;
+  }
 
   const blockReason = result?.promptFeedback?.blockReason;
   const finishReason = result?.candidates?.[0]?.finishReason;
@@ -85,7 +92,8 @@ function extractResponseText(result) {
 const GEMINI_ENDPOINT = '/api/gemini';
 
 // Só o necessário vai ao servidor: papéis e textos (campos da tela como isMeta ficam de fora).
-const toWireHistory = (history) => history.map(({ role, text }) => ({ role, text }));
+const toWireHistory = (history) =>
+  trimHistory(history, MAX_HISTORY_MESSAGES).history.map(({ role, text }) => ({ role, text }));
 
 function postToServer(payload, signal) {
   return fetchWithRetry(GEMINI_ENDPOINT, {

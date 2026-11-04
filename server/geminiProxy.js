@@ -3,6 +3,7 @@
 // Não depende de plataforma: api/gemini.js (Vercel) e o servidor de desenvolvimento
 // chamam handleGeminiRequest().
 import { COUNSELING_CASES } from '../src/data/counselingCases.js';
+import { MAX_HISTORY_MESSAGES, MAX_MESSAGE_CHARS } from '../src/config/limits.js';
 import { HELPER_PROMPTS, buildHelperUserPrompt, buildPersonaPrompt } from '../src/config/prompts.js';
 
 const DEFAULT_MODEL = 'gemini-3.6-flash';
@@ -19,10 +20,12 @@ function validate(body) {
 
   if (mode !== 'chat' && mode !== 'helper') return { error: 'Modo desconhecido.' };
   if (!Array.isArray(history) || history.length === 0) return { error: 'Histórico inválido.' };
+  if (history.length > MAX_HISTORY_MESSAGES) return { error: 'Histórico longo demais.' };
   for (const msg of history) {
     if (!msg || !ROLES.has(msg.role) || typeof msg.text !== 'string' || !msg.text.trim()) {
       return { error: 'Mensagem inválida no histórico.' };
     }
+    if (msg.text.length > MAX_MESSAGE_CHARS) return { error: 'Mensagem longa demais.' };
   }
 
   if (mode === 'chat') {
@@ -40,7 +43,7 @@ function buildPayload({ mode, history, selectedCase, helper }) {
     return {
       contents: history.map((msg) => ({ role: msg.role, parts: [{ text: msg.text }] })),
       systemInstruction: { parts: [{ text: buildPersonaPrompt(selectedCase.systemPrompt) }] },
-      generationConfig: { temperature: 0.7, topP: 0.95, maxOutputTokens: 2048 },
+      generationConfig: { temperature: 0.7, topP: 0.95, maxOutputTokens: 4096 },
     };
   }
   return {

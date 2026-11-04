@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import HelperModal from './HelperModal';
 import { GeminiError, requestHelperAnalysis, sendChatTurn } from '../services/geminiService';
 import { formatMessageHtml } from '../utils/sanitize';
+import { MAX_HISTORY_MESSAGES } from '../config/limits';
 import { formatTranscript } from '../utils/transcript';
 import {
   EVALUATION_PROMPT,
@@ -138,6 +139,7 @@ export default function ChatScreen({ selectedCase, isOnline, onEndSession }) {
     runHelper('find_verses');
   };
 
+  const isHistoryTrimmed = chatHistory.filter((msg) => !msg.isError).length > MAX_HISTORY_MESSAGES;
   const hasConversation = chatHistory.some((msg) => msg.role === 'user');
 
   const handleEndSessionClick = () => {
@@ -265,6 +267,12 @@ export default function ChatScreen({ selectedCase, isOnline, onEndSession }) {
         )}
         <div ref={chatEndRef} />
       </main>
+
+      {isHistoryTrimmed && (
+        <p role="status" className="bg-slate-200 text-slate-800 text-center text-sm py-2 px-4">
+          Conversa longa: as mensagens mais antigas deixaram de ser consideradas pela IA. Use "Copiar conversa" para guardá-las.
+        </p>
+      )}
 
       <footer className="bg-white border-t-2 border-slate-200 p-4 md:p-6 shadow-up z-10">
         <form onSubmit={handleSendMessage} className="flex items-center space-x-4">

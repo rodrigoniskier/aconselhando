@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { handleGeminiRequest } from './geminiProxy';
+import { MAX_HISTORY_MESSAGES, MAX_MESSAGE_CHARS } from '../src/config/limits';
 import { COUNSELING_CASES } from '../src/data/counselingCases';
 
 const upstreamOk = (text = 'Resposta da IA') => ({
@@ -60,6 +61,35 @@ describe('handleGeminiRequest: validação', () => {
     expect(result.status).toBe(400);
     expect(result.body.error).toBe('bad_request');
     expect(fetchImpl).not.toHaveBeenCalled();
+  });
+});
+
+describe('handleGeminiRequest: limites de tamanho', () => {
+  it('recusa histórico acima do limite de mensagens', async () => {
+    const tooMany = Array.from({ length: MAX_HISTORY_MESSAGES + 1 }, () => ({ role: 'user', text: 'oi' }));
+    const fetchImpl = vi.fn();
+    const result = await call({ mode: 'chat', caseId, history: tooMany }, { fetchImpl });
+    expect(result.status).toBe(400);
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it('aceita histórico exatamente no limite', async () => {
+    const atLimit = Array.from({ length: MAX_HISTORY_MESSAGES }, () => ({ role: 'user', text: 'oi' }));
+    const result = await call({ mode: 'chat', caseId, history: atLimit });
+    expect(result.status).toBe(200);
+  });
+
+  it('recusa mensagem gigante', async () => {
+    const huge = [{ role: 'user', text: 'a'.repeat(MAX_MESSAGE_CHARS + 1) }];
+    const result = await call({ mode: 'chat', caseId, history: huge });
+    expect(result.status).toBe(400);
+  });
+
+  it('dá espaço de sobra para respostas longas, como a avaliação final', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(upstreamOk());
+    await call({ mode: 'chat', caseId, history }, { fetchImpl });
+    const payload = JSON.parse(fetchImpl.mock.calls[0][1].body);
+    expect(payload.generationConfig.maxOutputTokens).toBeGreaterThanOrEqual(4096);
   });
 });
 

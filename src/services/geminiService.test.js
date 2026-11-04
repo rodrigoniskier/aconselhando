@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { requestHelperAnalysis, sendChatTurn } from './geminiService';
+import { MAX_HISTORY_MESSAGES } from '../config/limits';
 
 const okResponse = (text) => ({
   ok: true,
@@ -155,6 +156,53 @@ describe('sendChatTurn', () => {
 
     expect(error.name).toBe('AbortError');
     expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('tamanho da conversa', () => {
+  const longHistory = Array.from({ length: MAX_HISTORY_MESSAGES + 15 }, (_, i) => ({
+    role: i % 2 === 0 ? 'model' : 'user',
+    text: `m${i}`,
+  }));
+
+  it('envia no máximo o limite de mensagens, mantendo a primeira e as mais recentes', async () => {
+    fetchMock.mockResolvedValue(okResponse('ok'));
+    await runWithTimers(sendChatTurn({ history: longHistory, caseId: 'case_01' }));
+    const sent = JSON.parse(fetchMock.mock.calls[0][1].body).history;
+    expect(sent).toHaveLength(MAX_HISTORY_MESSAGES);
+    expect(sent[0].text).toBe('m0');
+    expect(sent.at(-1).text).toBe(longHistory.at(-1).text);
+  });
+
+  it('o ajudante também respeita o limite', async () => {
+    fetchMock.mockResolvedValue(okResponse('ok'));
+    await runWithTimers(requestHelperAnalysis({ helper: 'find_verses', history: longHistory }));
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body).history).toHaveLength(MAX_HISTORY_MESSAGES);
+  });
+
+  it('avisa quando a resposta foi cortada por ser longa demais', async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        candidates: [{ finishReason: 'MAX_TOKENS', content: { parts: [{ text: 'Texto até aqui' }] } }],
+      }),
+    });
+    const { value } = await runWithTimers(sendChatTurn({ history, caseId: 'case_01' }));
+    expect(value).toContain('Texto até aqui');
+    expect(value).toMatch(/cortada/i);
+  });
+
+  it('não acrescenta aviso quando a resposta termina normalmente', async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        candidates: [{ finishReason: 'STOP', content: { parts: [{ text: 'Completo.' }] } }],
+      }),
+    });
+    const { value } = await runWithTimers(sendChatTurn({ history, caseId: 'case_01' }));
+    expect(value).toBe('Completo.');
   });
 });
 
