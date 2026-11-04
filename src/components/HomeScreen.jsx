@@ -3,7 +3,7 @@
  */
 export default function HomeScreen({ onStart }) {
   return (
-    <div className="flex flex-col justify-center min-h-screen bg-slate-900 text-white p-8 font-sans">
+    <div className="flex flex-col justify-center min-h-dvh bg-slate-900 text-white p-8 font-sans">
       <div className="text-center">
         <h1 className="text-4xl md:text-5xl font-bold mb-6 font-serif tracking-tight">
           Plataforma de Treinamento em Aconselhamento Bíblico

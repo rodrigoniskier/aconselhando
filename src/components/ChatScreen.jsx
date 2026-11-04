@@ -182,7 +182,7 @@ export default function ChatScreen({ selectedCase, isOnline, onEndSession }) {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-slate-100 font-sans">
+    <div className="flex flex-col h-dvh bg-slate-100 font-sans">
       {(isHelperLoading || helperContent) && (
         <HelperModal
           content={helperContent}
@@ -200,14 +200,14 @@ export default function ChatScreen({ selectedCase, isOnline, onEndSession }) {
           <button
             onClick={handleCopyConversation}
             disabled={!chatHistory.some((msg) => !msg.isError)}
-            className="bg-slate-700 hover:bg-slate-800 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-slate-300 disabled:bg-slate-400"
+            className="bg-slate-700 hover:bg-slate-800 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-slate-300 disabled:bg-slate-300 disabled:text-slate-600"
           >
             {copyStatus === 'copied' ? 'Copiado!' : copyStatus === 'failed' ? 'Não foi possível copiar' : 'Copiar conversa'}
           </button>
         <button
           onClick={handleEndSessionClick}
           disabled={isBusy}
-          className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-5 rounded-lg transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-red-300 disabled:bg-slate-400"
+          className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-5 rounded-lg transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-red-300 disabled:bg-slate-300 disabled:text-slate-600"
         >
           Encerrar Sessão
         </button>
@@ -218,7 +218,12 @@ export default function ChatScreen({ selectedCase, isOnline, onEndSession }) {
         <span className="font-bold">ATENÇÃO:</span> Simulação de treinamento com personagem fictício. Esta conversa não é salva automaticamente: use "Copiar conversa" para guardar. Em caso de sofrimento real, ligue 188 (CVV, 24 horas).
       </div>
 
-      <main className="flex-grow overflow-y-auto p-4 md:p-8 space-y-4">
+      <main
+        role="log"
+        aria-live="polite"
+        aria-label="Conversa de aconselhamento"
+        className="flex-grow overflow-y-auto p-4 md:p-8 space-y-4"
+      >
         {chatHistory.map((msg, index) => (
           <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div
@@ -241,7 +246,7 @@ export default function ChatScreen({ selectedCase, isOnline, onEndSession }) {
                   type="button"
                   onClick={handleRetryChat}
                   disabled={isBusy || !isOnline}
-                  className="mt-3 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold py-2 px-4 rounded-lg disabled:bg-slate-400"
+                  className="mt-3 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold py-2 px-4 rounded-lg disabled:bg-slate-300 disabled:text-slate-600"
                 >
                   Tentar de novo
                 </button>
@@ -251,7 +256,7 @@ export default function ChatScreen({ selectedCase, isOnline, onEndSession }) {
         ))}
 
         {isLoading && (
-          <div className="flex justify-start">
+          <div className="flex justify-start" role="status" aria-label="A IA está respondendo">
             <div className="bg-white text-slate-800 border border-slate-200 p-4 rounded-xl shadow-md">
               <div className="flex items-center space-x-2">
                 <div className="w-3 h-3 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
@@ -268,6 +273,7 @@ export default function ChatScreen({ selectedCase, isOnline, onEndSession }) {
         <form onSubmit={handleSendMessage} className="flex items-center space-x-4">
           <input
             type="text"
+            aria-label="Sua resposta como conselheiro"
             value={userInput}
             onChange={(e) => setUserInput(e.target.value)}
             placeholder="Digite sua resposta como conselheiro..."
@@ -277,7 +283,7 @@ export default function ChatScreen({ selectedCase, isOnline, onEndSession }) {
           <button
             type="submit"
             disabled={isBusy || !isOnline || !userInput.trim()}
-            className="bg-blue-600 text-white p-4 rounded-lg font-semibold shadow-md hover:bg-blue-700 transition-all duration-300 disabled:bg-slate-400 disabled:cursor-not-allowed"
+            className="bg-blue-600 text-white p-4 rounded-lg font-semibold shadow-md hover:bg-blue-700 transition-all duration-300 disabled:bg-slate-300 disabled:text-slate-600 disabled:cursor-not-allowed"
           >
             Enviar
           </button>
@@ -286,21 +292,21 @@ export default function ChatScreen({ selectedCase, isOnline, onEndSession }) {
           <button
             onClick={handleRequestEvaluation}
             disabled={isBusy || !isOnline}
-            className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-green-300 disabled:bg-slate-400 disabled:cursor-not-allowed"
+            className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-green-300 disabled:bg-slate-300 disabled:text-slate-600 disabled:cursor-not-allowed"
           >
             Solicitar Avaliação
           </button>
           <button
             onClick={handleSuggestQuestion}
             disabled={isBusy || !isOnline}
-            className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-purple-300 disabled:bg-slate-400 disabled:cursor-not-allowed"
+            className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-purple-300 disabled:bg-slate-300 disabled:text-slate-600 disabled:cursor-not-allowed"
           >
             ✨ Sugerir Pergunta
           </button>
           <button
             onClick={handleFindVerses}
             disabled={isBusy || !isOnline}
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-indigo-300 disabled:bg-slate-400 disabled:cursor-not-allowed"
+            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-indigo-300 disabled:bg-slate-300 disabled:text-slate-600 disabled:cursor-not-allowed"
           >
             ✨ Buscar Versículos
           </button>

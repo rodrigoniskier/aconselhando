@@ -1,3 +1,4 @@
+import { useModalA11y } from '../hooks/useModalA11y';
 import { APP_VERSION, WHATS_NEW } from '../config/appVersion';
 
 /**
@@ -5,11 +6,20 @@ import { APP_VERSION, WHATS_NEW } from '../config/appVersion';
  * nesta versão instalada.
  */
 export default function WhatsNewModal({ onClose }) {
+  const modalRef = useModalA11y(onClose);
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4 font-sans">
-      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full">
+    <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-50 p-4 font-sans">
+      <div
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="whatsnew-title"
+        tabIndex={-1}
+        className="bg-white rounded-xl shadow-2xl max-w-md w-full"
+      >
         <div className="p-5 border-b border-slate-200">
-          <h3 className="text-xl font-bold text-blue-800">🎉 Novidades da versão {APP_VERSION}</h3>
+          <h3 id="whatsnew-title" className="text-xl font-bold text-blue-800">🎉 Novidades da versão {APP_VERSION}</h3>
         </div>
         <div className="p-6">
           <ul className="list-disc pl-5 space-y-2 text-slate-800 text-sm leading-relaxed">

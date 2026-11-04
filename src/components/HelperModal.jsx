@@ -1,14 +1,24 @@
+import { useModalA11y } from '../hooks/useModalA11y';
 import { formatMessageHtml } from '../utils/sanitize';
 
 /**
  * Modal para exibir respostas dos helpers (sugestão de perguntas, versículos, etc.)
  */
 export default function HelperModal({ content, onClose, isLoading, onRetry }) {
+  const modalRef = useModalA11y(onClose);
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4 font-sans">
-      <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full transform transition-all scale-100 opacity-100">
+    <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-50 p-4 font-sans">
+      <div
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="helper-modal-title"
+        tabIndex={-1}
+        className="bg-white rounded-xl shadow-2xl max-w-lg w-full transform transition-all scale-100 opacity-100"
+      >
         <div className="p-5 border-b border-slate-200 flex justify-between items-center">
-          <h3 className="text-xl font-bold text-blue-800">✨ Assistente do Conselheiro</h3>
+          <h3 id="helper-modal-title" className="text-xl font-bold text-blue-800">✨ Assistente do Conselheiro</h3>
           <button
             onClick={onClose}
             aria-label="Fechar"
@@ -17,7 +27,7 @@ export default function HelperModal({ content, onClose, isLoading, onRetry }) {
             &times;
           </button>
         </div>
-        <div className="p-6 max-h-[60vh] overflow-y-auto">
+        <div className="p-6 max-h-[60vh] overflow-y-auto" aria-live="polite" aria-busy={isLoading}>
           {isLoading ? (
             <div className="flex justify-center items-center h-32">
               <div className="flex items-center space-x-2">

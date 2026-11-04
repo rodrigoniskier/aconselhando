@@ -5,7 +5,7 @@ import { COUNSELING_CASES } from '../data/counselingCases';
  */
 export default function MenuScreen({ onCaseSelect }) {
   return (
-    <div className="min-h-screen bg-slate-100 p-8 md:p-12">
+    <div className="min-h-dvh bg-slate-100 p-8 md:p-12">
       <h1 className="text-4xl font-bold text-slate-800 text-center mb-4">
         Selecione um Cenário
       </h1>
