@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { loadStoredScreen, resolveInitialScreen, saveScreen } from '../utils/screenRestore';
 
 /**
  * Gerencia a navegação entre telas usando o histórico real do navegador,
@@ -6,10 +7,16 @@ import { useCallback, useEffect, useState } from 'react';
  * app (chat -> menu -> home) em vez de fechar o app na primeira tentativa.
  */
 export function useScreenHistory(initialScreen) {
-  const [screen, setScreen] = useState(initialScreen);
+  const [initial] = useState(() => resolveInitialScreen(loadStoredScreen()));
+  const [screen, setScreen] = useState(initial.screen);
+  const [reloadNotice, setReloadNotice] = useState(initial.reloadedFromChat);
 
   useEffect(() => {
-    window.history.replaceState({ screen: initialScreen }, '');
+    saveScreen(screen);
+  }, [screen]);
+
+  useEffect(() => {
+    window.history.replaceState({ screen: initial.screen }, '');
 
     function handlePopState(event) {
       setScreen(event.state?.screen ?? initialScreen);
@@ -29,5 +36,7 @@ export function useScreenHistory(initialScreen) {
     window.history.back();
   }, []);
 
-  return { screen, navigateTo, goBack };
+  const dismissReloadNotice = useCallback(() => setReloadNotice(false), []);
+
+  return { screen, navigateTo, goBack, reloadNotice, dismissReloadNotice };
 }
