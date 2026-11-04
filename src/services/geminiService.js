@@ -1,32 +1,35 @@
 import { GEMINI_API_URL } from '../config/gemini';
 
+// Só erros passageiros valem uma nova tentativa: limite de uso e indisponibilidade.
+const RETRYABLE_STATUS = new Set([429, 503]);
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 async function fetchWithRetry(url, options, retries = 3, delay = 1000) {
-  let lastResponse;
   for (let i = 0; i < retries; i++) {
+    const isLastAttempt = i === retries - 1;
+    let response;
+
     try {
-      const response = await fetch(url, options);
-      lastResponse = response;
-
-      if (response.ok) {
-        return await response.json();
-      }
-
-      // Backoff apenas para rate limit, com retentativas restantes.
-      if (response.status === 429 && i < retries - 1) {
-        await new Promise((resolve) => setTimeout(resolve, delay * 2 ** i));
-        continue;
-      }
-
-      const errorText = await response.text();
-      throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+      response = await fetch(url, options);
     } catch (error) {
       // Nunca engolir um abort: quem cancelou a requisição precisa saber.
-      if (error.name === 'AbortError') throw error;
-      if (i === retries - 1) throw error;
-      await new Promise((resolve) => setTimeout(resolve, delay * 2 ** i));
+      if (error.name === 'AbortError' || isLastAttempt) throw error;
+      await sleep(delay * 2 ** i);
+      continue;
     }
+
+    if (response.ok) return response.json();
+
+    if (RETRYABLE_STATUS.has(response.status) && !isLastAttempt) {
+      await sleep(delay * 2 ** i);
+      continue;
+    }
+
+    const errorText = await response.text();
+    throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
   }
-  throw new Error(`Falha após ${retries} tentativas. Status: ${lastResponse?.status}`);
+  throw new Error(`Falha após ${retries} tentativas.`);
 }
 
 function extractResponseText(result) {

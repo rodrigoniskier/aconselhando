@@ -23,4 +23,6 @@ Origem: auditoria de engenharia de software. Ordem de dependência (bloqueadores
 - 19 Política de privacidade — bloqueado por: 04
 - 20 Versão única e padrão de commits — bloqueado por: ninguém
 
+- 21 Não repetir erros permanentes da IA — bloqueado por: 01
+
 Pode começar já: 01, 17, 20

@@ -90,16 +90,25 @@ describe('sendChatTurn', () => {
     expect(error.message).toMatch(/429/);
   });
 
-  // Comportamento atual (candidato a ticket futuro): erros que não são 429 também
-  // são repetidos, porque o erro é lançado dentro do try e capturado pelo catch.
-  it('repete erro 500 até esgotar as tentativas e mostra status e mensagem', async () => {
-    fetchMock.mockResolvedValue(errorResponse(500, 'quebrou'));
+  it.each([400, 401, 403, 404, 500])('não repete o erro permanente %i', async (status) => {
+    fetchMock.mockResolvedValue(errorResponse(status, 'quebrou'));
 
     const { error } = await runWithTimers(sendChatTurn({ history, systemPrompt: 'x' }));
 
-    expect(fetchMock).toHaveBeenCalledTimes(3);
-    expect(error.message).toMatch(/500/);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(error.message).toMatch(String(status));
     expect(error.message).toMatch(/quebrou/);
+  });
+
+  it('repete o erro passageiro 503 e usa a resposta seguinte', async () => {
+    fetchMock
+      .mockResolvedValueOnce(errorResponse(503))
+      .mockResolvedValueOnce(okResponse('Voltou.'));
+
+    const { value } = await runWithTimers(sendChatTurn({ history, systemPrompt: 'x' }));
+
+    expect(value).toBe('Voltou.');
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
   it('repassa o sinal de cancelamento ao fetch', async () => {
