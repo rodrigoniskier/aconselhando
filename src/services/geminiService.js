@@ -3,6 +3,14 @@ import { trimHistory } from '../utils/trimHistory';
 
 // Mensagens mostradas ao usuário, por tipo de problema. Detalhes técnicos ficam
 // em `detail` e no console, nunca na tela.
+// Descreve uma espera em linguagem simples.
+function describeWait(seconds) {
+  const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+  if (seconds < 60) return plural(seconds, 'segundo');
+  if (seconds < 3600) return plural(Math.ceil(seconds / 60), 'minuto');
+  return plural(Math.ceil(seconds / 3600), 'hora');
+}
+
 const USER_MESSAGES = {
   network: 'Não foi possível conectar. Verifique sua conexão com a internet e tente de novo.',
   rate_limit: 'Muitas solicitações em pouco tempo. Aguarde alguns instantes e tente de novo.',
@@ -14,8 +22,13 @@ const USER_MESSAGES = {
 };
 
 export class GeminiError extends Error {
-  constructor(kind, { status, detail } = {}) {
-    super(USER_MESSAGES[kind] ?? USER_MESSAGES.unknown);
+  constructor(kind, { status, detail, retryAfterSeconds } = {}) {
+    super(
+      kind === 'rate_limit' && retryAfterSeconds
+        ? `Você atingiu o limite de uso por enquanto. Tente de novo em ${describeWait(retryAfterSeconds)}.`
+        : (USER_MESSAGES[kind] ?? USER_MESSAGES.unknown),
+    );
+    this.retryAfterSeconds = retryAfterSeconds;
     this.name = 'GeminiError';
     this.kind = kind;
     this.status = status;
@@ -30,14 +43,17 @@ function kindForStatus(status) {
   return 'unknown';
 }
 
-// O servidor responde erros como JSON { error: 'codigo' }.
-function readErrorCode(text) {
+// O servidor responde erros como JSON { error: 'codigo', ... }.
+function readErrorBody(text) {
   try {
-    return JSON.parse(text)?.error;
+    return JSON.parse(text) ?? {};
   } catch {
-    return undefined;
+    return {};
   }
 }
+
+// Esperas maiores que isso (cota do servidor) não valem repetição automática.
+const MAX_AUTO_RETRY_WAIT_SECONDS = 5;
 
 // Só erros passageiros valem uma nova tentativa: limite de uso e indisponibilidade.
 const RETRYABLE_STATUS = new Set([429, 503]);
@@ -61,14 +77,18 @@ async function fetchWithRetry(url, options, retries = 3, delay = 1000) {
 
     if (response.ok) return response.json();
 
-    if (RETRYABLE_STATUS.has(response.status) && !isLastAttempt) {
+    const detail = await response.text();
+    const errorBody = readErrorBody(detail);
+    const retryAfterSeconds = errorBody.retryAfterSeconds;
+    const waitIsLong = retryAfterSeconds > MAX_AUTO_RETRY_WAIT_SECONDS;
+
+    if (RETRYABLE_STATUS.has(response.status) && !waitIsLong && !isLastAttempt) {
       await sleep(delay * 2 ** i);
       continue;
     }
 
-    const detail = await response.text();
-    const kind = readErrorCode(detail) === 'not_configured' ? 'config' : kindForStatus(response.status);
-    throw new GeminiError(kind, { status: response.status, detail });
+    const kind = errorBody.error === 'not_configured' ? 'config' : kindForStatus(response.status);
+    throw new GeminiError(kind, { status: response.status, detail, retryAfterSeconds });
   }
   throw new GeminiError('unknown', { detail: `Falha após ${retries} tentativas.` });
 }

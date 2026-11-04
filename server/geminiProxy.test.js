@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { handleGeminiRequest } from './geminiProxy';
+import { createRateLimiter } from './rateLimiter';
 import { MAX_HISTORY_MESSAGES, MAX_MESSAGE_CHARS } from '../src/config/limits';
 import { COUNSELING_CASES } from '../src/data/counselingCases';
 
@@ -61,6 +62,42 @@ describe('handleGeminiRequest: validação', () => {
     expect(result.status).toBe(400);
     expect(result.body.error).toBe('bad_request');
     expect(fetchImpl).not.toHaveBeenCalled();
+  });
+});
+
+describe('handleGeminiRequest: limite de uso', () => {
+  const makeLimiter = (max) =>
+    createRateLimiter({ limits: [{ name: 'minuto', scope: 'client', windowMs: 60_000, max }] });
+
+  it('responde 429 com o tempo de espera quando a cota acaba, sem chamar o Google', async () => {
+    const limiter = makeLimiter(2);
+    const fetchImpl = vi.fn().mockResolvedValue(upstreamOk());
+    const send = () => call({ mode: 'chat', caseId, history }, { fetchImpl, rateLimiter: limiter, clientId: '1.2.3.4' });
+
+    expect((await send()).status).toBe(200);
+    expect((await send()).status).toBe(200);
+    const blocked = await send();
+
+    expect(blocked.status).toBe(429);
+    expect(blocked.body.error).toBe('rate_limit');
+    expect(blocked.body.retryAfterSeconds).toBeGreaterThan(0);
+    expect(blocked.headers['Retry-After']).toBe(String(blocked.body.retryAfterSeconds));
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
+
+  it('separa a cota por cliente', async () => {
+    const limiter = makeLimiter(1);
+    const send = (clientId) => call({ mode: 'chat', caseId, history }, { rateLimiter: limiter, clientId });
+    expect((await send('A')).status).toBe(200);
+    expect((await send('B')).status).toBe(200);
+    expect((await send('A')).status).toBe(429);
+  });
+
+  it('pedidos inválidos não gastam a cota', async () => {
+    const limiter = makeLimiter(1);
+    await call({ mode: 'livre' }, { rateLimiter: limiter, clientId: 'A' });
+    const ok = await call({ mode: 'chat', caseId, history }, { rateLimiter: limiter, clientId: 'A' });
+    expect(ok.status).toBe(200);
   });
 });
 

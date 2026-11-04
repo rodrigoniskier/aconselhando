@@ -159,6 +159,40 @@ describe('sendChatTurn', () => {
   });
 });
 
+describe('limite de uso do servidor', () => {
+  const quotaResponse = (retryAfterSeconds) => ({
+    ok: false,
+    status: 429,
+    text: async () => JSON.stringify({ error: 'rate_limit', retryAfterSeconds }),
+  });
+
+  it('não repete quando a espera é longa e diz quando tentar de novo', async () => {
+    fetchMock.mockResolvedValue(quotaResponse(45));
+    const { error } = await runWithTimers(sendChatTurn({ history, caseId: 'case_01' }));
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(error.kind).toBe('rate_limit');
+    expect(error.retryAfterSeconds).toBe(45);
+    expect(error.message).toMatch(/45 segundos/);
+  });
+
+  it.each([
+    [1, /1 segundo/],
+    [90, /2 minutos/],
+    [3 * 3600, /3 horas/],
+  ])('descreve a espera de %i segundos em linguagem simples', async (seconds, pattern) => {
+    fetchMock.mockResolvedValue(quotaResponse(seconds));
+    const { error } = await runWithTimers(sendChatTurn({ history, caseId: 'case_01' }));
+    expect(error.message).toMatch(pattern);
+  });
+
+  it('ainda repete quando a espera é curtíssima', async () => {
+    fetchMock.mockResolvedValueOnce(quotaResponse(1)).mockResolvedValueOnce(okResponse('Passou.'));
+    const { value } = await runWithTimers(sendChatTurn({ history, caseId: 'case_01' }));
+    expect(value).toBe('Passou.');
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+});
+
 describe('tamanho da conversa', () => {
   const longHistory = Array.from({ length: MAX_HISTORY_MESSAGES + 15 }, (_, i) => ({
     role: i % 2 === 0 ? 'model' : 'user',

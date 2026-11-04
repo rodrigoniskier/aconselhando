@@ -61,7 +61,7 @@ function buildPayload({ mode, history, selectedCase, helper }) {
  * Processa um pedido do app. Independente de plataforma: recebe dados simples e
  * devolve { status, body, headers }.
  */
-export async function handleGeminiRequest({ method, body, env, fetchImpl = fetch }) {
+export async function handleGeminiRequest({ method, body, env, fetchImpl = fetch, rateLimiter, clientId = 'desconhecido' }) {
   if (method !== 'POST') return reply(405, { error: 'method_not_allowed' }, { Allow: 'POST' });
 
   const apiKey = env.GEMINI_API_KEY;
@@ -69,6 +69,17 @@ export async function handleGeminiRequest({ method, body, env, fetchImpl = fetch
 
   const parsed = validate(body);
   if (parsed.error) return badRequest(parsed.error);
+
+  if (rateLimiter) {
+    const verdict = await rateLimiter.check(clientId);
+    if (!verdict.allowed) {
+      return reply(
+        429,
+        { error: 'rate_limit', scope: verdict.scope, retryAfterSeconds: verdict.retryAfterSeconds },
+        { 'Retry-After': String(verdict.retryAfterSeconds) },
+      );
+    }
+  }
 
   const model = env.GEMINI_MODEL || DEFAULT_MODEL;
   const fallbackModel = env.GEMINI_FALLBACK_MODEL || DEFAULT_FALLBACK_MODEL;
