@@ -1,7 +1,10 @@
-// Atualize a cada release com novidades relevantes para o usuário final.
-// O pop-up de novidades usa APP_VERSION para mostrar cada resumo uma única
-// vez por instalação (guardado no localStorage).
-export const APP_VERSION = '1.2.0';
+import { version } from '../../package.json';
+
+// Atualize WHATS_NEW a cada release com novidades relevantes para o usuário final.
+// A versão vem do package.json (única fonte): para lançar uma versão nova, use
+// `npm version <patch|minor|major>`. O pop-up de novidades usa APP_VERSION para
+// mostrar cada resumo uma única vez por instalação (guardado no localStorage).
+export const APP_VERSION = version;
 
 export const WHATS_NEW = [
   'Modelo de IA atualizado para respostas mais naturais e variadas.',
