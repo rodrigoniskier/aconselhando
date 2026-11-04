@@ -4,8 +4,8 @@
 
 **Blocked by:** 08 (Mensagens de erro compreensíveis)
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Resposta bloqueada e resposta vazia são distinguidas
-- [ ] O usuário recebe explicação e uma ação sugerida
-- [ ] Testes cobrem os dois casos
+- [x] Resposta bloqueada e resposta vazia são distinguidas
+- [x] O usuário recebe explicação e uma ação sugerida
+- [x] Testes cobrem os dois casos

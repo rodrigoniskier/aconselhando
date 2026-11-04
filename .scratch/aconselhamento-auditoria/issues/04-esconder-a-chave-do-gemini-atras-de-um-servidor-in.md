@@ -4,10 +4,10 @@
 
 **Blocked by:** 01 (Rede de segurança de testes)
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] A chave não aparece no pacote gerado pelo build nem nas requisições feitas pelo navegador
-- [ ] Conversa, sugerir pergunta, buscar versículos e avaliação funcionam via servidor
-- [ ] A chave atual é considerada comprometida e substituída (passo manual do dono do projeto, documentado)
-- [ ] Aviso de 'chave não configurada' adaptado ao novo modelo
-- [ ] Testes do serviço atualizados
+- [x] A chave não aparece no pacote gerado pelo build nem nas requisições feitas pelo navegador
+- [x] Conversa, sugerir pergunta, buscar versículos e avaliação funcionam via servidor
+- [x] A chave atual é considerada comprometida e substituída (passo manual do dono do projeto, documentado)
+- [x] Aviso de 'chave não configurada' adaptado ao novo modelo
+- [x] Testes do serviço atualizados

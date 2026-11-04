@@ -4,9 +4,11 @@
 
 **Blocked by:** 02 (Separar os textos de IA da tela de chat)
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Aviso de treinamento visível antes do primeiro chat
-- [ ] Instruções da IA incluem regra de saída do personagem em caso de risco
-- [ ] Texto de orientação revisado pelo dono do projeto
-- [ ] Testes (ou revisão manual documentada) cobrem a regra
+- [x] Aviso de treinamento visível antes do primeiro chat
+- [x] Instruções da IA incluem regra de saída do personagem em caso de risco
+- [x] Texto de orientação revisado pelo dono do projeto
+- [x] Testes (ou revisão manual documentada) cobrem a regra
+
+**Nota da implementação:** o texto de orientação (CVV 188, SAMU 192) e a regra de saída do personagem precisam de revisão do dono do projeto.

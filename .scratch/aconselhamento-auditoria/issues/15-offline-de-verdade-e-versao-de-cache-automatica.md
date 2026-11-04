@@ -4,8 +4,8 @@
 
 **Blocked by:** 14 (Service Worker seguro)
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] O app abre sem internet depois da primeira visita
-- [ ] Cada release invalida o cache antigo automaticamente
-- [ ] Documentação curta de como a versão é gerada
+- [x] O app abre sem internet depois da primeira visita
+- [x] Cada release invalida o cache antigo automaticamente
+- [x] Documentação curta de como a versão é gerada

@@ -4,9 +4,9 @@
 
 **Blocked by:** 01 (Rede de segurança de testes)
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Encerrar exige confirmação clara que avisa que a conversa será perdida
-- [ ] Botão copia toda a conversa em texto legível
-- [ ] Funciona com teclado e leitor de tela
-- [ ] Testes cobrem o fluxo de confirmação e o texto copiado
+- [x] Encerrar exige confirmação clara que avisa que a conversa será perdida
+- [x] Botão copia toda a conversa em texto legível
+- [x] Funciona com teclado e leitor de tela
+- [x] Testes cobrem o fluxo de confirmação e o texto copiado

@@ -4,9 +4,11 @@
 
 **Blocked by:** 04 (Esconder a chave do Gemini atrás de um servidor intermediário)
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Requisições acima da cota recebem recusa clara no servidor
-- [ ] O app mostra mensagem amigável quando a cota acaba
-- [ ] Existe teto global de uso configurável
-- [ ] Testes cobrem o limite dentro e fora da cota
+- [x] Requisições acima da cota recebem recusa clara no servidor
+- [x] O app mostra mensagem amigável quando a cota acaba
+- [x] Existe teto global de uso configurável
+- [x] Testes cobrem o limite dentro e fora da cota
+
+**Nota da implementação:** a contagem de uso fica na memória de cada instância do servidor; para um teto rigoroso entre instâncias, trocar por um armazenamento compartilhado (ex.: Upstash/Vercel KV) mantendo a interface do limitador. Login completo não foi feito (decisão pendente do dono).

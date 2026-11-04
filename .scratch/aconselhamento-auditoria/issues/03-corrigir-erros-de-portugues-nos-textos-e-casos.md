@@ -4,8 +4,8 @@
 
 **Blocked by:** 02 (Separar os textos de IA da tela de chat)
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Revisão completa dos casos e dos textos de instrução, sem erros ortográficos ou frases truncadas
-- [ ] Lista das correções feita na descrição do commit
-- [ ] Lint e build passam
+- [x] Revisão completa dos casos e dos textos de instrução, sem erros ortográficos ou frases truncadas
+- [x] Lista das correções feita na descrição do commit
+- [x] Lint e build passam

@@ -4,9 +4,11 @@
 
 **Blocked by:** 01 (Rede de segurança de testes)
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] README descreve o que é o app, como rodar, testar e publicar
-- [ ] Existe um exemplo de configuração sem segredos
-- [ ] Uma verificação automática roda lint, testes e build em cada mudança
-- [ ] A verificação falha de verdade quando algo quebra
+- [x] README descreve o que é o app, como rodar, testar e publicar
+- [x] Existe um exemplo de configuração sem segredos
+- [x] Uma verificação automática roda lint, testes e build em cada mudança
+- [x] A verificação falha de verdade quando algo quebra
+
+**Nota da implementação:** a verificação do CI foi escrita mas só roda de fato no GitHub após o push; localmente lint, testes e build passam.

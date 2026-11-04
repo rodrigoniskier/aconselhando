@@ -4,8 +4,8 @@
 
 **Blocked by:** 04 (Esconder a chave do Gemini atrás de um servidor intermediário)
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Chamadas à API de IA nunca entram no cache
-- [ ] Quando a rede e o cache falham, o usuário vê uma página/resposta de contingência
-- [ ] Testes ou verificação manual documentada em modo offline
+- [x] Chamadas à API de IA nunca entram no cache
+- [x] Quando a rede e o cache falham, o usuário vê uma página/resposta de contingência
+- [x] Testes ou verificação manual documentada em modo offline

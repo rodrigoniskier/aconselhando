@@ -4,8 +4,8 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Versão do pacote e versão exibida no app vêm da mesma fonte
-- [ ] Guia de mensagens de commit no repositório
-- [ ] Lint e build passam
+- [x] Versão do pacote e versão exibida no app vêm da mesma fonte
+- [x] Guia de mensagens de commit no repositório
+- [x] Lint e build passam

@@ -4,9 +4,9 @@
 
 **Blocked by:** 01 (Rede de segurança de testes)
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Erros 400, 401, 403, 404 e 500 falham na primeira tentativa, sem espera
-- [ ] 429, 503 e falhas de rede continuam sendo repetidos com espera crescente
-- [ ] Cancelamento continua sem repetição
-- [ ] Testes cobrem cada categoria e a contagem de chamadas
+- [x] Erros 400, 401, 403, 404 e 500 falham na primeira tentativa, sem espera
+- [x] 429, 503 e falhas de rede continuam sendo repetidos com espera crescente
+- [x] Cancelamento continua sem repetição
+- [x] Testes cobrem cada categoria e a contagem de chamadas

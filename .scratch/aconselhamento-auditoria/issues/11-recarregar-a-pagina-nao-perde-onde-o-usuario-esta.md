@@ -4,8 +4,8 @@
 
 **Blocked by:** 01 (Rede de segurança de testes)
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Recarregar na tela do chat não leva silenciosamente para a tela inicial
-- [ ] O botão 'voltar' do Android continua navegando entre as telas
-- [ ] Testes cobrem a restauração de estado e o caso sem estado
+- [x] Recarregar na tela do chat não leva silenciosamente para a tela inicial
+- [x] O botão 'voltar' do Android continua navegando entre as telas
+- [x] Testes cobrem a restauração de estado e o caso sem estado

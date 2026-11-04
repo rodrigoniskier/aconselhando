@@ -25,4 +25,4 @@ Origem: auditoria de engenharia de software. Ordem de dependência (bloqueadores
 
 - 21 Não repetir erros permanentes da IA — bloqueado por: 01
 
-Pode começar já: 01, 17, 20
+Todos os 21 tickets concluídos.

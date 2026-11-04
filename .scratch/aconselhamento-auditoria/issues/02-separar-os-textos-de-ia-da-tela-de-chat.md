@@ -4,8 +4,8 @@
 
 **Blocked by:** 01 (Rede de segurança de testes)
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Nenhum texto de instrução da IA fica dentro do componente do chat
-- [ ] O comportamento visível do app não muda
-- [ ] Testes e lint passam
+- [x] Nenhum texto de instrução da IA fica dentro do componente do chat
+- [x] O comportamento visível do app não muda
+- [x] Testes e lint passam

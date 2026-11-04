@@ -4,8 +4,8 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] A auditoria de dependências não aponta vulnerabilidades altas, ou cada exceção está justificada
-- [ ] Build e lint passam
-- [ ] Navegação manual de smoke test do app feita
+- [x] A auditoria de dependências não aponta vulnerabilidades altas, ou cada exceção está justificada
+- [x] Build e lint passam
+- [x] Navegação manual de smoke test do app feita

@@ -4,9 +4,9 @@
 
 **Blocked by:** 01 (Rede de segurança de testes), 04 (Esconder a chave do Gemini atrás de um servidor intermediário)
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Existe um limite configurável de histórico enviado
-- [ ] A avaliação final não é truncada em sessões longas
-- [ ] O usuário é avisado quando partes antigas deixam de ser consideradas
-- [ ] Testes cobrem o corte do histórico
+- [x] Existe um limite configurável de histórico enviado
+- [x] A avaliação final não é truncada em sessões longas
+- [x] O usuário é avisado quando partes antigas deixam de ser consideradas
+- [x] Testes cobrem o corte do histórico

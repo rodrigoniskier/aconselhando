@@ -4,8 +4,8 @@
 
 **Blocked by:** 14 (Service Worker seguro)
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Nenhuma atualização recarrega a página no meio de uma sessão
-- [ ] O aviso de nova versão aparece e funciona
-- [ ] Verificação manual documentada do fluxo de atualização
+- [x] Nenhuma atualização recarrega a página no meio de uma sessão
+- [x] O aviso de nova versão aparece e funciona
+- [x] Verificação manual documentada do fluxo de atualização

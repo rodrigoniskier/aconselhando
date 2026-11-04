@@ -4,9 +4,9 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Existe um comando de teste documentado que roda no terminal
-- [ ] Testes do sanitizador cobrem os caracteres perigosos e as quebras de linha
-- [ ] Testes do serviço de IA cobrem resposta válida, resposta vazia, erro 429 com nova tentativa, outros erros e cancelamento
-- [ ] Lint e build continuam passando
+- [x] Existe um comando de teste documentado que roda no terminal
+- [x] Testes do sanitizador cobrem os caracteres perigosos e as quebras de linha
+- [x] Testes do serviço de IA cobrem resposta válida, resposta vazia, erro 429 com nova tentativa, outros erros e cancelamento
+- [x] Lint e build continuam passando

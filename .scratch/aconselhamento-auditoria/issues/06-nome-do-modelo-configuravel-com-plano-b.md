@@ -4,8 +4,8 @@
 
 **Blocked by:** 04 (Esconder a chave do Gemini atrás de um servidor intermediário)
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Trocar o modelo não exige nova versão do app
-- [ ] Se o modelo principal responde que não existe mais, o reserva é usado e o evento fica registrado
-- [ ] Testes cobrem a troca para o modelo reserva
+- [x] Trocar o modelo não exige nova versão do app
+- [x] Se o modelo principal responde que não existe mais, o reserva é usado e o evento fica registrado
+- [x] Testes cobrem a troca para o modelo reserva

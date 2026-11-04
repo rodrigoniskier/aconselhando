@@ -4,11 +4,11 @@
 
 **Blocked by:** 01 (Rede de segurança de testes)
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Campo de mensagem tem rótulo acessível
-- [ ] Novas respostas são anunciadas a leitores de tela
-- [ ] Modais prendem o foco e fecham com Esc
-- [ ] Contraste de botões desabilitados atende ao padrão WCAG AA
-- [ ] O campo de digitar nunca fica escondido em celulares
-- [ ] Verificação manual em celular e com leitor de tela documentada
+- [x] Campo de mensagem tem rótulo acessível
+- [x] Novas respostas são anunciadas a leitores de tela
+- [x] Modais prendem o foco e fecham com Esc
+- [x] Contraste de botões desabilitados atende ao padrão WCAG AA
+- [x] O campo de digitar nunca fica escondido em celulares
+- [x] Verificação manual em celular e com leitor de tela documentada
