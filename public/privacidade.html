@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Política de Privacidade - Aconselhando</title>
+    <style>
+      :root { --bg: #f8fafc; --fg: #0f172a; --muted: #475569; --link: #1d4ed8; --card: #ffffff; --line: #e2e8f0; }
+      @media (prefers-color-scheme: dark) {
+        :root { --bg: #0f172a; --fg: #e2e8f0; --muted: #94a3b8; --link: #93c5fd; --card: #1e293b; --line: #334155; }
+      }
+      body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif; }
+      main { max-width: 42rem; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+      h1 { font-size: 1.6rem; line-height: 1.25; }
+      h2 { font-size: 1.15rem; margin-top: 2rem; }
+      a { color: var(--link); }
+      .meta { color: var(--muted); font-size: 0.9rem; }
+      .box { background: var(--card); border: 1px solid var(--line); border-radius: 0.5rem; padding: 0.75rem 1rem; }
+      li { margin: 0.25rem 0; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p><a href="/">&larr; Voltar ao aplicativo</a></p>
+      <h1>Política de Privacidade do Aconselhando</h1>
+      <p class="meta">Última atualização: 4 de novembro de 2026</p>
+
+      <p>
+        O Aconselhando é uma ferramenta de <strong>treinamento</strong> em aconselhamento bíblico, com casos
+        fictícios interpretados por inteligência artificial. Esta página explica, em linguagem simples, o que
+        acontece com o que você digita.
+      </p>
+
+      <div class="box">
+        <strong>Em resumo:</strong> o que você escreve no chat é enviado ao nosso servidor e, dele, ao Google
+        (serviço Gemini) para gerar as respostas. O aplicativo <strong>não guarda suas conversas</strong>. Não digite
+        dados pessoais ou confidenciais de pessoas reais.
+      </div>
+
+      <h2>1. O que é enviado e para quem</h2>
+      <ul>
+        <li>As mensagens da sessão atual (suas falas e as do personagem) são enviadas ao <strong>servidor do aplicativo</strong>, hospedado na Vercel.</li>
+        <li>O servidor repassa essas mensagens ao <strong>Google (API Gemini)</strong>, que gera a resposta da IA.</li>
+        <li>O Google trata esses dados conforme os termos da API Gemini. Dependendo do tipo de conta de API usada, o Google pode reter as informações por um período ou usá-las para melhorar seus produtos. Consulte os termos do Google para detalhes.</li>
+      </ul>
+
+      <h2>2. O que o aplicativo guarda</h2>
+      <ul>
+        <li><strong>Conversas:</strong> não são salvas por nós. Ao encerrar a sessão ou recarregar a página, elas somem. Use o botão &ldquo;Copiar conversa&rdquo; se quiser guardá-las.</li>
+        <li><strong>Servidor:</strong> não registramos o conteúdo das conversas. Para evitar abusos, mantemos temporariamente na memória um contador de uso por endereço de rede (IP), que é descartado em no máximo 24 horas.</li>
+        <li><strong>Hospedagem:</strong> a Vercel pode registrar dados técnicos de acesso (como IP e horário) segundo as políticas dela.</li>
+      </ul>
+
+      <h2>3. O que fica no seu aparelho</h2>
+      <ul>
+        <li>Um marcador da última versão cujas novidades você viu (armazenamento local).</li>
+        <li>A última tela aberta, para avisar caso a página seja recarregada (armazenamento da sessão).</li>
+        <li>Uma cópia dos arquivos do aplicativo, para ele abrir sem internet (cache). Nenhum deles contém suas conversas.</li>
+      </ul>
+
+      <h2>4. Cookies, anúncios e rastreamento</h2>
+      <p>O aplicativo não usa cookies de rastreamento, não exibe anúncios e não usa ferramentas de análise de comportamento.</p>
+
+      <h2>5. Cuidados importantes</h2>
+      <ul>
+        <li>Não insira nomes, telefones, endereços ou histórias identificáveis de pessoas reais.</li>
+        <li>O aplicativo não substitui aconselhamento pastoral nem acompanhamento profissional. Em sofrimento intenso ou risco de vida, ligue para o CVV (188, gratuito, 24 horas) ou para o SAMU (192).</li>
+      </ul>
+
+      <h2>6. Seus direitos e contato</h2>
+      <p>
+        Como não guardamos suas conversas, não há dados de conversa para corrigir ou apagar nos nossos sistemas.
+        Para dúvidas sobre esta política ou sobre seus dados, fale com o responsável:
+        Rodrigo Niskier Ferreira Barbosa &mdash; <strong>[PREENCHER: e-mail de contato]</strong>.
+      </p>
+
+      <h2>7. Mudanças nesta política</h2>
+      <p>Se algo mudar na forma como tratamos os dados, esta página será atualizada e a data no topo será alterada.</p>
+    </main>
+  </body>
+</html>

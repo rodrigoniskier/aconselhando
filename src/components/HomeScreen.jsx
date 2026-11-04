@@ -49,6 +49,11 @@ export default function HomeScreen({ onStart }) {
             <p>Desenvolvido por: Rodrigo Niskier Ferreira Barbosa</p>
             <p className="text-slate-500">Presbítero da Igreja Presbiteriana de Altiplano</p>
             <p className="text-slate-500">Seminarista do Seminário Presbiteriano do Norte</p>
+            <p className="mt-3">
+              <a href="/privacidade.html" className="text-blue-300 underline hover:text-blue-200">
+                Política de Privacidade
+              </a>
+            </p>
           </div>
 
         </div>
