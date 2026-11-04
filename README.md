@@ -1,3 +1,17 @@
+# Aconselhando
+
+Aplicativo de treinamento em aconselhamento bíblico com simulações de IA (React + Vite).
+
+## Comandos
+
+- `npm run dev`: servidor de desenvolvimento
+- `npm test`: roda os testes automáticos uma vez (Vitest)
+- `npm run test:watch`: testes em modo contínuo
+- `npm run lint`: verifica o estilo do código
+- `npm run build`: gera a versão de produção
+
+---
+
 # React + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
