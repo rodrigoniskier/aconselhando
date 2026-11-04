@@ -3,7 +3,7 @@ import { formatMessageHtml } from '../utils/sanitize';
 /**
  * Modal para exibir respostas dos helpers (sugestão de perguntas, versículos, etc.)
  */
-export default function HelperModal({ content, onClose, isLoading }) {
+export default function HelperModal({ content, onClose, isLoading, onRetry }) {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4 font-sans">
       <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full transform transition-all scale-100 opacity-100">
@@ -33,7 +33,15 @@ export default function HelperModal({ content, onClose, isLoading }) {
             />
           )}
         </div>
-        <div className="p-4 bg-slate-50 border-t border-slate-200 text-right rounded-b-xl">
+        <div className="p-4 bg-slate-50 border-t border-slate-200 text-right rounded-b-xl space-x-3">
+          {onRetry && (
+            <button
+              onClick={onRetry}
+              className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-6 rounded-lg transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-red-300"
+            >
+              Tentar de novo
+            </button>
+          )}
           <button
             onClick={onClose}
             className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-blue-300"

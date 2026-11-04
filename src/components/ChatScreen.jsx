@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import HelperModal from './HelperModal';
-import { requestHelperAnalysis, sendChatTurn } from '../services/geminiService';
+import { GeminiError, requestHelperAnalysis, sendChatTurn } from '../services/geminiService';
 import { formatMessageHtml } from '../utils/sanitize';
 import {
   EVALUATION_PROMPT,
@@ -8,6 +8,14 @@ import {
   INITIAL_GREETING,
   SUGGEST_QUESTION_PROMPT,
 } from '../config/prompts';
+
+const GENERIC_ERROR = 'Ocorreu um erro inesperado. Tente de novo.';
+
+// Mostra ao usuário só a mensagem amigável; o detalhe técnico vai para o console.
+function toUserMessage(error) {
+  console.error('Erro ao falar com a IA:', error);
+  return error instanceof GeminiError ? error.message : GENERIC_ERROR;
+}
 
 /**
  * Tela de Chat de Aconselhamento
@@ -18,20 +26,25 @@ export default function ChatScreen({ selectedCase, isOnline, onEndSession }) {
   const [isLoading, setIsLoading] = useState(false);
   const [isHelperLoading, setIsHelperLoading] = useState(false);
   const [helperContent, setHelperContent] = useState(null);
+  const [helperFailed, setHelperFailed] = useState(false);
 
   const chatEndRef = useRef(null);
   const chatControllerRef = useRef(null);
   const helperControllerRef = useRef(null);
+  const lastChatHistoryRef = useRef(null);
+  const lastHelperPromptRef = useRef(null);
 
   const runChatTurn = async (history) => {
     chatControllerRef.current?.abort();
     const controller = new AbortController();
     chatControllerRef.current = controller;
+    lastChatHistoryRef.current = history;
     setIsLoading(true);
 
     try {
       const modelResponse = await sendChatTurn({
-        history,
+        // Mensagens de erro da tela nunca vão para a IA.
+        history: history.filter((msg) => !msg.isError),
         systemPrompt: selectedCase.systemPrompt,
         signal: controller.signal,
       });
@@ -42,7 +55,7 @@ export default function ChatScreen({ selectedCase, isOnline, onEndSession }) {
         ...prev,
         {
           role: 'model',
-          text: `Desculpe, ocorreu um erro ao processar sua resposta. Verifique sua conexão ou a configuração da API. (${error.message})`,
+          text: toUserMessage(error),
           isError: true,
         },
       ]);
@@ -57,8 +70,10 @@ export default function ChatScreen({ selectedCase, isOnline, onEndSession }) {
     helperControllerRef.current?.abort();
     const controller = new AbortController();
     helperControllerRef.current = controller;
+    lastHelperPromptRef.current = systemPrompt;
     setIsHelperLoading(true);
     setHelperContent(null);
+    setHelperFailed(false);
 
     try {
       const response = await requestHelperAnalysis({
@@ -69,7 +84,8 @@ export default function ChatScreen({ selectedCase, isOnline, onEndSession }) {
       setHelperContent(response);
     } catch (error) {
       if (error.name === 'AbortError') return;
-      setHelperContent(`Desculpe, ocorreu um erro ao buscar sua assistência: ${error.message}`);
+      setHelperFailed(true);
+      setHelperContent(toUserMessage(error));
     } finally {
       if (helperControllerRef.current === controller) {
         setIsHelperLoading(false);
@@ -122,8 +138,20 @@ export default function ChatScreen({ selectedCase, isOnline, onEndSession }) {
     runHelper(FIND_VERSES_PROMPT);
   };
 
+  const handleRetryChat = () => {
+    if (isBusy || !isOnline || !lastChatHistoryRef.current) return;
+    setChatHistory((prev) => prev.filter((msg) => !msg.isError));
+    runChatTurn(lastChatHistoryRef.current);
+  };
+
+  const handleRetryHelper = () => {
+    if (isBusy || !isOnline || !lastHelperPromptRef.current) return;
+    runHelper(lastHelperPromptRef.current);
+  };
+
   const handleCloseModal = () => {
     helperControllerRef.current?.abort();
+    setHelperFailed(false);
     setHelperContent(null);
     setIsHelperLoading(false);
   };
@@ -135,6 +163,7 @@ export default function ChatScreen({ selectedCase, isOnline, onEndSession }) {
           content={helperContent}
           isLoading={isHelperLoading}
           onClose={handleCloseModal}
+          onRetry={helperFailed ? handleRetryHelper : undefined}
         />
       )}
 
@@ -172,6 +201,16 @@ export default function ChatScreen({ selectedCase, isOnline, onEndSession }) {
                   className="text-sm leading-relaxed"
                   dangerouslySetInnerHTML={{ __html: formatMessageHtml(msg.text) }}
                 />
+              )}
+              {msg.isError && index === chatHistory.length - 1 && (
+                <button
+                  type="button"
+                  onClick={handleRetryChat}
+                  disabled={isBusy || !isOnline}
+                  className="mt-3 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold py-2 px-4 rounded-lg disabled:bg-slate-400"
+                >
+                  Tentar de novo
+                </button>
               )}
             </div>
           </div>

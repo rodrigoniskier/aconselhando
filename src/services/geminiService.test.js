@@ -67,7 +67,8 @@ describe('sendChatTurn', () => {
 
     const { error } = await runWithTimers(sendChatTurn({ history, systemPrompt: 'x' }));
 
-    expect(error.message).toMatch(/inválida ou vazia/);
+    expect(error.kind).toBe('empty');
+    expect(error.message).toMatch(/não retornou/i);
   });
 
   it('tenta de novo depois de erro 429 e usa a resposta seguinte', async () => {
@@ -87,7 +88,8 @@ describe('sendChatTurn', () => {
     const { error } = await runWithTimers(sendChatTurn({ history, systemPrompt: 'x' }));
 
     expect(fetchMock).toHaveBeenCalledTimes(3);
-    expect(error.message).toMatch(/429/);
+    expect(error.kind).toBe('rate_limit');
+    expect(error.status).toBe(429);
   });
 
   it.each([400, 401, 403, 404, 500])('não repete o erro permanente %i', async (status) => {
@@ -96,8 +98,10 @@ describe('sendChatTurn', () => {
     const { error } = await runWithTimers(sendChatTurn({ history, systemPrompt: 'x' }));
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(error.message).toMatch(String(status));
-    expect(error.message).toMatch(/quebrou/);
+    expect(error.status).toBe(status);
+    expect(error.detail).toMatch(/quebrou/);
+    // O usuário nunca vê código HTTP nem o texto bruto do servidor.
+    expect(error.message).not.toMatch(/quebrou|HTTP|\d{3}/);
   });
 
   it('repete o erro passageiro 503 e usa a resposta seguinte', async () => {
@@ -138,6 +142,69 @@ describe('sendChatTurn', () => {
 
     expect(error.name).toBe('AbortError');
     expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('classificação de erros para o usuário', () => {
+  const failWith = async (response) => {
+    fetchMock.mockResolvedValue(response);
+    const { error } = await runWithTimers(sendChatTurn({ history, systemPrompt: 'x' }));
+    return error;
+  };
+
+  it('503 persistente vira indisponibilidade', async () => {
+    const error = await failWith(errorResponse(503));
+    expect(error.kind).toBe('unavailable');
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+  });
+
+  it('falha de rede persistente vira erro de conexão', async () => {
+    fetchMock.mockRejectedValue(new TypeError('Failed to fetch'));
+    const { error } = await runWithTimers(sendChatTurn({ history, systemPrompt: 'x' }));
+    expect(error.kind).toBe('network');
+    expect(error.message).toMatch(/conex/i);
+  });
+
+  it.each([401, 403])('%i vira problema de configuração', async (status) => {
+    const error = await failWith(errorResponse(status));
+    expect(error.kind).toBe('config');
+  });
+
+  it('cada tipo tem uma mensagem diferente em português', async () => {
+    const messages = new Set();
+    for (const response of [errorResponse(429), errorResponse(503), errorResponse(401), errorResponse(500)]) {
+      fetchMock.mockReset();
+      messages.add((await failWith(response)).message);
+    }
+    expect(messages.size).toBe(4);
+  });
+
+  it('pedido bloqueado por segurança vira kind blocked, com explicação', async () => {
+    const error = await failWith({
+      ok: true,
+      status: 200,
+      json: async () => ({ promptFeedback: { blockReason: 'SAFETY' } }),
+    });
+    expect(error.kind).toBe('blocked');
+    expect(error.message).toMatch(/reformul/i);
+  });
+
+  it('resposta cortada por filtro de segurança sem texto vira blocked', async () => {
+    const error = await failWith({
+      ok: true,
+      status: 200,
+      json: async () => ({ candidates: [{ finishReason: 'SAFETY' }] }),
+    });
+    expect(error.kind).toBe('blocked');
+  });
+
+  it('bloqueado e vazio têm mensagens distintas', async () => {
+    const blocked = await failWith({
+      ok: true, status: 200, json: async () => ({ promptFeedback: { blockReason: 'OTHER' } }),
+    });
+    fetchMock.mockReset();
+    const empty = await failWith(emptyResponse);
+    expect(blocked.message).not.toBe(empty.message);
   });
 });
 
