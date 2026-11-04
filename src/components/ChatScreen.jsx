@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import HelperModal from './HelperModal';
 import { GeminiError, requestHelperAnalysis, sendChatTurn } from '../services/geminiService';
 import { formatMessageHtml } from '../utils/sanitize';
+import { formatTranscript } from '../utils/transcript';
 import {
   EVALUATION_PROMPT,
   FIND_VERSES_PROMPT,
@@ -27,6 +28,7 @@ export default function ChatScreen({ selectedCase, isOnline, onEndSession }) {
   const [isHelperLoading, setIsHelperLoading] = useState(false);
   const [helperContent, setHelperContent] = useState(null);
   const [helperFailed, setHelperFailed] = useState(false);
+  const [copyStatus, setCopyStatus] = useState(null);
 
   const chatEndRef = useRef(null);
   const chatControllerRef = useRef(null);
@@ -138,6 +140,28 @@ export default function ChatScreen({ selectedCase, isOnline, onEndSession }) {
     runHelper(FIND_VERSES_PROMPT);
   };
 
+  const hasConversation = chatHistory.some((msg) => msg.role === 'user');
+
+  const handleEndSessionClick = () => {
+    if (hasConversation) {
+      const confirmed = window.confirm(
+        'Encerrar a sessão? A conversa não é salva e será perdida. Use "Copiar conversa" antes, se quiser guardá-la.',
+      );
+      if (!confirmed) return;
+    }
+    onEndSession();
+  };
+
+  const handleCopyConversation = async () => {
+    try {
+      await navigator.clipboard.writeText(formatTranscript(chatHistory));
+      setCopyStatus('copied');
+    } catch {
+      setCopyStatus('failed');
+    }
+    setTimeout(() => setCopyStatus(null), 3000);
+  };
+
   const handleRetryChat = () => {
     if (isBusy || !isOnline || !lastChatHistoryRef.current) return;
     setChatHistory((prev) => prev.filter((msg) => !msg.isError));
@@ -171,13 +195,22 @@ export default function ChatScreen({ selectedCase, isOnline, onEndSession }) {
         <h1 className="text-xl md:text-2xl font-bold text-slate-800">
           Sessão: <span className="text-blue-700">{selectedCase.title}</span>
         </h1>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleCopyConversation}
+            disabled={!chatHistory.some((msg) => !msg.isError)}
+            className="bg-slate-700 hover:bg-slate-800 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-slate-300 disabled:bg-slate-400"
+          >
+            {copyStatus === 'copied' ? 'Copiado!' : copyStatus === 'failed' ? 'Não foi possível copiar' : 'Copiar conversa'}
+          </button>
         <button
-          onClick={onEndSession}
+          onClick={handleEndSessionClick}
           disabled={isBusy}
           className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-5 rounded-lg transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-red-300 disabled:bg-slate-400"
         >
           Encerrar Sessão
         </button>
+        </div>
       </header>
 
       <div className="bg-yellow-100 border-b-2 border-yellow-300 text-yellow-900 p-3 text-center font-semibold shadow-sm">
