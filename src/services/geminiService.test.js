@@ -45,27 +45,40 @@ const runWithTimers = async (promise) => {
 };
 
 describe('sendChatTurn', () => {
-  it('devolve o texto da resposta e envia a persona e o histórico', async () => {
+  it('devolve o texto da resposta e envia só o caso e o histórico ao servidor', async () => {
     fetchMock.mockResolvedValueOnce(okResponse('Estou cansado.'));
 
     const { value } = await runWithTimers(
-      sendChatTurn({ history, systemPrompt: 'Você é Carlos' }),
+      sendChatTurn({ history: [...history, { role: 'user', text: 'x', isMeta: true, extra: 1 }], caseId: 'case_01' }),
     );
 
     expect(value).toBe('Estou cansado.');
     expect(fetchMock).toHaveBeenCalledTimes(1);
-    const body = JSON.parse(fetchMock.mock.calls[0][1].body);
-    expect(body.systemInstruction.parts[0].text).toBe('Você é Carlos');
-    expect(body.contents).toEqual([
-      { role: 'user', parts: [{ text: 'Olá' }] },
-      { role: 'model', parts: [{ text: 'Oi, tudo bem?' }] },
-    ]);
+    const [url, options] = fetchMock.mock.calls[0];
+    expect(url).toBe('/api/gemini');
+    expect(options.method).toBe('POST');
+    expect(JSON.parse(options.body)).toEqual({
+      mode: 'chat',
+      caseId: 'case_01',
+      history: [
+        { role: 'user', text: 'Olá' },
+        { role: 'model', text: 'Oi, tudo bem?' },
+        { role: 'user', text: 'x' },
+      ],
+    });
+  });
+
+  it('servidor sem chave configurada vira problema de configuração', async () => {
+    fetchMock.mockResolvedValue({ ok: false, status: 500, text: async () => '{"error":"not_configured"}' });
+    const { error } = await runWithTimers(sendChatTurn({ history, caseId: 'case_01' }));
+    expect(error.kind).toBe('config');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it('falha quando a resposta vem vazia', async () => {
     fetchMock.mockResolvedValue(emptyResponse);
 
-    const { error } = await runWithTimers(sendChatTurn({ history, systemPrompt: 'x' }));
+    const { error } = await runWithTimers(sendChatTurn({ history, caseId: 'case_01' }));
 
     expect(error.kind).toBe('empty');
     expect(error.message).toMatch(/não retornou/i);
@@ -76,7 +89,7 @@ describe('sendChatTurn', () => {
       .mockResolvedValueOnce(errorResponse(429))
       .mockResolvedValueOnce(okResponse('Agora foi.'));
 
-    const { value } = await runWithTimers(sendChatTurn({ history, systemPrompt: 'x' }));
+    const { value } = await runWithTimers(sendChatTurn({ history, caseId: 'case_01' }));
 
     expect(value).toBe('Agora foi.');
     expect(fetchMock).toHaveBeenCalledTimes(2);
@@ -85,7 +98,7 @@ describe('sendChatTurn', () => {
   it('desiste do 429 na última tentativa e mostra o status', async () => {
     fetchMock.mockResolvedValue(errorResponse(429, 'cota'));
 
-    const { error } = await runWithTimers(sendChatTurn({ history, systemPrompt: 'x' }));
+    const { error } = await runWithTimers(sendChatTurn({ history, caseId: 'case_01' }));
 
     expect(fetchMock).toHaveBeenCalledTimes(3);
     expect(error.kind).toBe('rate_limit');
@@ -95,7 +108,7 @@ describe('sendChatTurn', () => {
   it.each([400, 401, 403, 404, 500])('não repete o erro permanente %i', async (status) => {
     fetchMock.mockResolvedValue(errorResponse(status, 'quebrou'));
 
-    const { error } = await runWithTimers(sendChatTurn({ history, systemPrompt: 'x' }));
+    const { error } = await runWithTimers(sendChatTurn({ history, caseId: 'case_01' }));
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(error.status).toBe(status);
@@ -109,7 +122,7 @@ describe('sendChatTurn', () => {
       .mockResolvedValueOnce(errorResponse(503))
       .mockResolvedValueOnce(okResponse('Voltou.'));
 
-    const { value } = await runWithTimers(sendChatTurn({ history, systemPrompt: 'x' }));
+    const { value } = await runWithTimers(sendChatTurn({ history, caseId: 'case_01' }));
 
     expect(value).toBe('Voltou.');
     expect(fetchMock).toHaveBeenCalledTimes(2);
@@ -119,7 +132,7 @@ describe('sendChatTurn', () => {
     fetchMock.mockResolvedValueOnce(okResponse('ok'));
     const controller = new AbortController();
 
-    await runWithTimers(sendChatTurn({ history, systemPrompt: 'x', signal: controller.signal }));
+    await runWithTimers(sendChatTurn({ history, caseId: 'case_01', signal: controller.signal }));
 
     expect(fetchMock.mock.calls[0][1].signal).toBe(controller.signal);
   });
@@ -129,7 +142,7 @@ describe('sendChatTurn', () => {
       .mockRejectedValueOnce(new TypeError('Failed to fetch'))
       .mockResolvedValueOnce(okResponse('De volta.'));
 
-    const { value } = await runWithTimers(sendChatTurn({ history, systemPrompt: 'x' }));
+    const { value } = await runWithTimers(sendChatTurn({ history, caseId: 'case_01' }));
 
     expect(value).toBe('De volta.');
     expect(fetchMock).toHaveBeenCalledTimes(2);
@@ -138,7 +151,7 @@ describe('sendChatTurn', () => {
   it('propaga o cancelamento sem tentar de novo', async () => {
     fetchMock.mockRejectedValue(abortError());
 
-    const { error } = await runWithTimers(sendChatTurn({ history, systemPrompt: 'x' }));
+    const { error } = await runWithTimers(sendChatTurn({ history, caseId: 'case_01' }));
 
     expect(error.name).toBe('AbortError');
     expect(fetchMock).toHaveBeenCalledTimes(1);
@@ -148,7 +161,7 @@ describe('sendChatTurn', () => {
 describe('classificação de erros para o usuário', () => {
   const failWith = async (response) => {
     fetchMock.mockResolvedValue(response);
-    const { error } = await runWithTimers(sendChatTurn({ history, systemPrompt: 'x' }));
+    const { error } = await runWithTimers(sendChatTurn({ history, caseId: 'case_01' }));
     return error;
   };
 
@@ -160,7 +173,7 @@ describe('classificação de erros para o usuário', () => {
 
   it('falha de rede persistente vira erro de conexão', async () => {
     fetchMock.mockRejectedValue(new TypeError('Failed to fetch'));
-    const { error } = await runWithTimers(sendChatTurn({ history, systemPrompt: 'x' }));
+    const { error } = await runWithTimers(sendChatTurn({ history, caseId: 'case_01' }));
     expect(error.kind).toBe('network');
     expect(error.message).toMatch(/conex/i);
   });
@@ -209,26 +222,21 @@ describe('classificação de erros para o usuário', () => {
 });
 
 describe('requestHelperAnalysis', () => {
-  it('manda o histórico como transcrição com os papéis em português', async () => {
+  it('envia o identificador do ajudante e o histórico ao servidor', async () => {
     fetchMock.mockResolvedValueOnce(okResponse('1. Pergunta?'));
 
-    const { value } = await runWithTimers(
-      requestHelperAnalysis({ systemPrompt: 'Supervisor', history }),
-    );
+    const { value } = await runWithTimers(requestHelperAnalysis({ helper: 'suggest_question', history }));
 
     expect(value).toBe('1. Pergunta?');
-    const body = JSON.parse(fetchMock.mock.calls[0][1].body);
-    const sent = body.contents[0].parts[0].text;
-    expect(sent).toContain('Conselheiro: Olá');
-    expect(sent).toContain('Aconselhando: Oi, tudo bem?');
-    expect(body.systemInstruction.parts[0].text).toBe('Supervisor');
-    expect(body.contents).toHaveLength(1);
+    const [url, options] = fetchMock.mock.calls[0];
+    expect(url).toBe('/api/gemini');
+    expect(JSON.parse(options.body)).toEqual({ mode: 'helper', helper: 'suggest_question', history });
   });
 
   it('propaga o cancelamento', async () => {
     fetchMock.mockRejectedValue(abortError());
 
-    const { error } = await runWithTimers(requestHelperAnalysis({ systemPrompt: 'x', history }));
+    const { error } = await runWithTimers(requestHelperAnalysis({ helper: 'find_verses', history }));
 
     expect(error.name).toBe('AbortError');
   });

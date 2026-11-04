@@ -14,7 +14,7 @@ Aplicativo web (PWA, também empacotado como app Android) para **treinar aconsel
 
 ```bash
 npm install
-cp .env.example .env.local   # preencha VITE_GEMINI_API_KEY
+cp .env.example .env.local   # preencha GEMINI_API_KEY (fica só no servidor)
 npm run dev
 ```
 
@@ -31,9 +31,11 @@ npm run dev
 
 O app é publicado como site estático (Vercel). Antes de publicar, rode `npm run lint`, `npm test` e `npm run build`. Para lançar uma versão, veja [CONTRIBUTING.md](CONTRIBUTING.md).
 
-## Segurança da chave da API
+## Servidor intermediário e a chave da API
 
-Atenção: enquanto a chamada ao Gemini sair direto do navegador, a chave fica visível no código distribuído (ticket 04 da auditoria resolve isso com um servidor intermediário). Restrinja a chave no painel do Google e não a compartilhe.
+O navegador **nunca** fala direto com o Google. Ele chama `POST /api/gemini`, e o servidor (`server/geminiProxy.js`, publicado pela Vercel como `api/gemini.js`) guarda a chave, monta as instruções da IA e só aceita pedidos de formatos conhecidos (conversa de um caso cadastrado, ou um dos ajudantes). No `npm run dev` e `npm run preview` a mesma rota é servida localmente.
+
+Na Vercel, cadastre `GEMINI_API_KEY` em *Project Settings > Environment Variables* (veja `.env.example`). Se a chave antiga já foi publicada em versões anteriores do app, **revogue-a** no painel do Google e crie outra.
 
 ## Contribuindo
 

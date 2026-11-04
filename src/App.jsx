@@ -7,7 +7,6 @@ import WhatsNewModal from './components/WhatsNewModal';
 import { useScreenHistory } from './hooks/useScreenHistory';
 import { useOnlineStatus } from './hooks/useOnlineStatus';
 import { useWhatsNew } from './hooks/useWhatsNew';
-import { isGeminiConfigured } from './config/gemini';
 
 /**
  * Componente Principal da Aplicação
@@ -42,12 +41,6 @@ export default function App() {
           </button>
         </div>
       )}
-      {!isGeminiConfigured && (
-        <div role="alert" className="bg-amber-700 text-white text-center text-sm font-semibold py-2 px-4">
-          Chave da API Gemini não configurada. Configure VITE_GEMINI_API_KEY para usar o chat.
-        </div>
-      )}
-
       {screen === 'menu' && <MenuScreen onCaseSelect={handleCaseSelect} />}
       {screen === 'chat' && selectedCase && (
         <ChatScreen

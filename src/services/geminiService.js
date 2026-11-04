@@ -1,5 +1,3 @@
-import { GEMINI_API_URL } from '../config/gemini';
-
 // Mensagens mostradas ao usuário, por tipo de problema. Detalhes técnicos ficam
 // em `detail` e no console, nunca na tela.
 const USER_MESSAGES = {
@@ -27,6 +25,15 @@ function kindForStatus(status) {
   if (status === 503) return 'unavailable';
   if (status === 401 || status === 403) return 'config';
   return 'unknown';
+}
+
+// O servidor responde erros como JSON { error: 'codigo' }.
+function readErrorCode(text) {
+  try {
+    return JSON.parse(text)?.error;
+  } catch {
+    return undefined;
+  }
 }
 
 // Só erros passageiros valem uma nova tentativa: limite de uso e indisponibilidade.
@@ -57,7 +64,8 @@ async function fetchWithRetry(url, options, retries = 3, delay = 1000) {
     }
 
     const detail = await response.text();
-    throw new GeminiError(kindForStatus(response.status), { status: response.status, detail });
+    const kind = readErrorCode(detail) === 'not_configured' ? 'config' : kindForStatus(response.status);
+    throw new GeminiError(kind, { status: response.status, detail });
   }
   throw new GeminiError('unknown', { detail: `Falha após ${retries} tentativas.` });
 }
@@ -74,66 +82,34 @@ function extractResponseText(result) {
   throw new GeminiError('empty', { detail: JSON.stringify(result)?.slice(0, 500) });
 }
 
-/**
- * Envia o histórico completo da conversa para o Gemini, com a persona do
- * caso simulado como instrução de sistema, e retorna a fala do aconselhando.
- */
-export async function sendChatTurn({ history, systemPrompt, signal }) {
-  const payload = {
-    contents: history.map((msg) => ({
-      role: msg.role === 'user' ? 'user' : 'model',
-      parts: [{ text: msg.text }],
-    })),
-    systemInstruction: { parts: [{ text: systemPrompt }] },
-    generationConfig: {
-      temperature: 0.7,
-      topP: 0.95,
-      maxOutputTokens: 2048,
-    },
-  };
+const GEMINI_ENDPOINT = '/api/gemini';
 
-  const result = await fetchWithRetry(GEMINI_API_URL, {
+// Só o necessário vai ao servidor: papéis e textos (campos da tela como isMeta ficam de fora).
+const toWireHistory = (history) => history.map(({ role, text }) => ({ role, text }));
+
+function postToServer(payload, signal) {
+  return fetchWithRetry(GEMINI_ENDPOINT, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
     signal,
   });
+}
 
+/**
+ * Envia o histórico da conversa ao servidor, que aplica a persona do caso
+ * simulado, e retorna a fala do aconselhando.
+ */
+export async function sendChatTurn({ history, caseId, signal }) {
+  const result = await postToServer({ mode: 'chat', caseId, history: toWireHistory(history) }, signal);
   return extractResponseText(result);
 }
 
 /**
- * Chama a API para os recursos de apoio ao conselheiro (sugestão de
- * perguntas, versículos, avaliação) sem afetar o histórico principal do chat.
+ * Pede ao servidor os recursos de apoio ao conselheiro (sugestão de perguntas,
+ * versículos) sem afetar o histórico principal do chat.
  */
-export async function requestHelperAnalysis({ systemPrompt, history, signal }) {
-  const historyText = history
-    .map((msg) => `${msg.role === 'user' ? 'Conselheiro' : 'Aconselhando'}: ${msg.text}`)
-    .join('\n');
-
-  const fullUserPrompt = `
-    Aqui está o histórico da conversa para sua análise:
-    ---
-    ${historyText}
-    ---
-    Fim do histórico. Por favor, forneça sua assistência com base nisso.
-  `;
-
-  const payload = {
-    contents: [{ role: 'user', parts: [{ text: fullUserPrompt }] }],
-    systemInstruction: { parts: [{ text: systemPrompt }] },
-    generationConfig: {
-      temperature: 0.5,
-      maxOutputTokens: 2048,
-    },
-  };
-
-  const result = await fetchWithRetry(GEMINI_API_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-    signal,
-  });
-
+export async function requestHelperAnalysis({ helper, history, signal }) {
+  const result = await postToServer({ mode: 'helper', helper, history: toWireHistory(history) }, signal);
   return extractResponseText(result);
 }

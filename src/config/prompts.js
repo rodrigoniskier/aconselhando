@@ -56,3 +56,24 @@ const SAFETY_RULE = `
 `;
 
 export const buildPersonaPrompt = (casePrompt) => `${casePrompt.trim()}\n${SAFETY_RULE}`;
+
+// Ajudantes do conselheiro: o cliente envia só o identificador; o texto fica no servidor.
+export const HELPER_PROMPTS = {
+  suggest_question: SUGGEST_QUESTION_PROMPT,
+  find_verses: FIND_VERSES_PROMPT,
+};
+
+/** Transcrição enviada ao ajudante junto com a instrução. */
+export function buildHelperUserPrompt(history) {
+  const historyText = history
+    .map((msg) => `${msg.role === 'user' ? 'Conselheiro' : 'Aconselhando'}: ${msg.text}`)
+    .join('\n');
+
+  return `
+    Aqui está o histórico da conversa para sua análise:
+    ---
+    ${historyText}
+    ---
+    Fim do histórico. Por favor, forneça sua assistência com base nisso.
+  `;
+}

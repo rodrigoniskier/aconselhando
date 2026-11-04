@@ -5,10 +5,7 @@ import { formatMessageHtml } from '../utils/sanitize';
 import { formatTranscript } from '../utils/transcript';
 import {
   EVALUATION_PROMPT,
-  FIND_VERSES_PROMPT,
   INITIAL_GREETING,
-  buildPersonaPrompt,
-  SUGGEST_QUESTION_PROMPT,
 } from '../config/prompts';
 
 const GENERIC_ERROR = 'Ocorreu um erro inesperado. Tente de novo.';
@@ -35,7 +32,7 @@ export default function ChatScreen({ selectedCase, isOnline, onEndSession }) {
   const chatControllerRef = useRef(null);
   const helperControllerRef = useRef(null);
   const lastChatHistoryRef = useRef(null);
-  const lastHelperPromptRef = useRef(null);
+  const lastHelperRef = useRef(null);
 
   const runChatTurn = async (history) => {
     chatControllerRef.current?.abort();
@@ -48,7 +45,7 @@ export default function ChatScreen({ selectedCase, isOnline, onEndSession }) {
       const modelResponse = await sendChatTurn({
         // Mensagens de erro da tela nunca vão para a IA.
         history: history.filter((msg) => !msg.isError),
-        systemPrompt: buildPersonaPrompt(selectedCase.systemPrompt),
+        caseId: selectedCase.id,
         signal: controller.signal,
       });
       setChatHistory((prev) => [...prev, { role: 'model', text: modelResponse }]);
@@ -69,19 +66,19 @@ export default function ChatScreen({ selectedCase, isOnline, onEndSession }) {
     }
   };
 
-  const runHelper = async (systemPrompt) => {
+  const runHelper = async (helper) => {
     helperControllerRef.current?.abort();
     const controller = new AbortController();
     helperControllerRef.current = controller;
-    lastHelperPromptRef.current = systemPrompt;
+    lastHelperRef.current = helper;
     setIsHelperLoading(true);
     setHelperContent(null);
     setHelperFailed(false);
 
     try {
       const response = await requestHelperAnalysis({
-        systemPrompt,
-        history: chatHistory,
+        helper,
+        history: chatHistory.filter((msg) => !msg.isError),
         signal: controller.signal,
       });
       setHelperContent(response);
@@ -133,12 +130,12 @@ export default function ChatScreen({ selectedCase, isOnline, onEndSession }) {
 
   const handleSuggestQuestion = () => {
     if (isBusy || !isOnline) return;
-    runHelper(SUGGEST_QUESTION_PROMPT);
+    runHelper('suggest_question');
   };
 
   const handleFindVerses = () => {
     if (isBusy || !isOnline) return;
-    runHelper(FIND_VERSES_PROMPT);
+    runHelper('find_verses');
   };
 
   const hasConversation = chatHistory.some((msg) => msg.role === 'user');
@@ -170,8 +167,8 @@ export default function ChatScreen({ selectedCase, isOnline, onEndSession }) {
   };
 
   const handleRetryHelper = () => {
-    if (isBusy || !isOnline || !lastHelperPromptRef.current) return;
-    runHelper(lastHelperPromptRef.current);
+    if (isBusy || !isOnline || !lastHelperRef.current) return;
+    runHelper(lastHelperRef.current);
   };
 
   const handleCloseModal = () => {
