@@ -12,7 +12,7 @@ Plataforma de treinamento para aconselhamento bíblico com simulações de IA.
 
 **Tecnologias.** React 19, Vite, JavaScript, Gemini API, PWA (manifest e Service Worker), ESLint.
 
-**Qualidade e evidências.** Sanitização do conteúdo exibido e histórico de telas. Este repositório não tem testes automatizados.
+**Qualidade e evidências.** Sanitização do conteúdo exibido e histórico de telas. Não há testes automatizados; o CI roda lint e build a cada push e pull request. Licença MIT.
 
 ## Executar localmente
 
