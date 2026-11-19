@@ -21,13 +21,19 @@ function userMessageFor(status) {
   return 'Não foi possível obter a resposta agora. Verifique sua conexão e tente novamente.';
 }
 
-function retryDelayMs(response, attempt, baseDelay) {
+const MAX_CLIENT_WAIT_MS = 10_000;
+
+function serverRetryAfterMs(response) {
   const header = Number(response?.headers?.get('Retry-After'));
-  const fromHeader = Number.isFinite(header) && header > 0 ? header * 1000 : 0;
-  const backoff = baseDelay * 2 ** attempt;
+  return Number.isFinite(header) && header > 0 ? header * 1000 : 0;
+}
+
+function retryDelayMs(response, attempt, baseDelay) {
+  // Só o backoff calculado localmente tem teto; o Retry-After do servidor é respeitado.
+  const backoff = Math.min(baseDelay * 2 ** attempt, 8000);
   // Jitter evita que vários usuários repitam a chamada no mesmo instante.
   const jittered = backoff / 2 + Math.random() * (backoff / 2);
-  return Math.min(Math.max(fromHeader, jittered), 8000);
+  return Math.max(serverRetryAfterMs(response), jittered);
 }
 
 function wait(ms, signal) {
@@ -71,7 +77,12 @@ async function fetchWithRetry(url, options, retries = 3, delay = 1000) {
         retryable: transient,
       });
     }
-    await wait(retryDelayMs(response, i, delay), options?.signal);
+    const delayMs = retryDelayMs(response, i, delay);
+    // Espera longa demais para uma conversa: informa o usuário em vez de insistir.
+    if (delayMs > MAX_CLIENT_WAIT_MS) {
+      throw new GeminiError(userMessageFor(response.status), { status: response.status, retryable: true });
+    }
+    await wait(delayMs, options?.signal);
   }
   throw new GeminiError(userMessageFor(lastStatus), { status: lastStatus, retryable: true });
 }
