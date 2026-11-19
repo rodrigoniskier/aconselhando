@@ -1,16 +1,38 @@
-# React + Vite
+# Aconselhando
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Plataforma de treinamento para aconselhamento bíblico com simulações de IA.
 
-Currently, two official plugins are available:
+## Problema, público e resultado
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+**Problema.** Praticar aconselhamento exige situações realistas, e treinar com pessoas reais em sofrimento envolve riscos que a simulação evita.
 
-## React Compiler
+**Para quem.** Estudantes e líderes em formação em aconselhamento bíblico.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+**O que entrega.** Casos de aconselhamento simulados em que a IA assume a persona do aconselhando e conversa com o treinando, mais um assistente que sugere perguntas e referências durante a conversa. É instalável como PWA e mostra aviso quando está offline.
 
-## Expanding the ESLint configuration
+**Tecnologias.** React 19, Vite, JavaScript, Gemini API, PWA (manifest e Service Worker), ESLint.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+**Qualidade e evidências.** Sanitização do conteúdo exibido e histórico de telas. Este repositório não tem testes automatizados.
+
+## Executar localmente
+
+Requer Node.js.
+
+```bash
+npm install
+echo "VITE_GEMINI_API_KEY=sua-chave" > .env.local   # não versione este arquivo
+npm run dev
+```
+
+## Segurança e privacidade
+
+- As conversas simuladas são enviadas à Gemini API para gerar as respostas. Não digite dados reais de
+  pessoas.
+- A chave é lida de `VITE_GEMINI_API_KEY`. Variáveis `VITE_` ficam visíveis no código entregue ao
+  navegador, portanto, em uma publicação aberta, use uma chave restrita por domínio e por cota, ou
+  coloque um backend como intermediário. Nunca versione chaves.
+
+## Limitações
+
+- Os casos são simulações e não substituem supervisão de um conselheiro experiente.
+- Sem testes automatizados.
