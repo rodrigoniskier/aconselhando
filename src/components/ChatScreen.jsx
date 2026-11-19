@@ -79,7 +79,7 @@ export default function ChatScreen({ selectedCase, isOnline, onEndSession }) {
         ...prev,
         {
           role: 'model',
-          text: `Desculpe, ocorreu um erro ao processar sua resposta. Verifique sua conexão ou a configuração da API. (${error.message})`,
+          text: `Desculpe, não consegui responder agora. ${error.message}`,
           isError: true,
         },
       ]);
@@ -106,7 +106,7 @@ export default function ChatScreen({ selectedCase, isOnline, onEndSession }) {
       setHelperContent(response);
     } catch (error) {
       if (error.name === 'AbortError') return;
-      setHelperContent(`Desculpe, ocorreu um erro ao buscar sua assistência: ${error.message}`);
+      setHelperContent(`Desculpe, não foi possível buscar a assistência agora. ${error.message}`);
     } finally {
       if (helperControllerRef.current === controller) {
         setIsHelperLoading(false);

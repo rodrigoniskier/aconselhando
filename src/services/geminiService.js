@@ -1,32 +1,79 @@
 import { GEMINI_API_URL } from '../config/gemini';
 
+/** Erro com mensagem já adequada para mostrar ao usuário. */
+export class GeminiError extends Error {
+  constructor(userMessage, { status, retryable = false } = {}) {
+    super(userMessage);
+    this.name = 'GeminiError';
+    this.status = status;
+    this.retryable = retryable;
+  }
+}
+
+function userMessageFor(status) {
+  if (status === 429) {
+    return 'Muitas pessoas estão usando o aconselhamento agora ou o limite de uso foi atingido. Aguarde alguns instantes e tente novamente.';
+  }
+  if (status === 503 || status === 504 || status === 502) {
+    return 'O serviço de IA está sobrecarregado no momento. Tente novamente em alguns segundos.';
+  }
+  if (status === 413) return 'A conversa ficou longa demais. Inicie um novo caso para continuar.';
+  return 'Não foi possível obter a resposta agora. Verifique sua conexão e tente novamente.';
+}
+
+function retryDelayMs(response, attempt, baseDelay) {
+  const header = Number(response?.headers?.get('Retry-After'));
+  const fromHeader = Number.isFinite(header) && header > 0 ? header * 1000 : 0;
+  const backoff = baseDelay * 2 ** attempt;
+  // Jitter evita que vários usuários repitam a chamada no mesmo instante.
+  const jittered = backoff / 2 + Math.random() * (backoff / 2);
+  return Math.min(Math.max(fromHeader, jittered), 8000);
+}
+
+function wait(ms, signal) {
+  return new Promise((resolve, reject) => {
+    if (signal?.aborted) return reject(new DOMException('Aborted', 'AbortError'));
+    const timer = setTimeout(resolve, ms);
+    signal?.addEventListener(
+      'abort',
+      () => {
+        clearTimeout(timer);
+        reject(new DOMException('Aborted', 'AbortError'));
+      },
+      { once: true },
+    );
+  });
+}
+
+// O proxy (api/gemini.js) já faz retry e fallback entre modelos; aqui só
+// tentamos de novo falhas transitórias, poucas vezes e com espera crescente.
 async function fetchWithRetry(url, options, retries = 3, delay = 1000) {
-  let lastResponse;
+  let lastStatus;
   for (let i = 0; i < retries; i++) {
+    let response;
     try {
-      const response = await fetch(url, options);
-      lastResponse = response;
-
-      if (response.ok) {
-        return await response.json();
-      }
-
-      // Backoff apenas para rate limit, com retentativas restantes.
-      if (response.status === 429 && i < retries - 1) {
-        await new Promise((resolve) => setTimeout(resolve, delay * 2 ** i));
-        continue;
-      }
-
-      const errorText = await response.text();
-      throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+      response = await fetch(url, options);
     } catch (error) {
       // Nunca engolir um abort: quem cancelou a requisição precisa saber.
       if (error.name === 'AbortError') throw error;
-      if (i === retries - 1) throw error;
-      await new Promise((resolve) => setTimeout(resolve, delay * 2 ** i));
+      if (i === retries - 1) throw new GeminiError(userMessageFor(), { retryable: true });
+      await wait(retryDelayMs(null, i, delay), options?.signal);
+      continue;
     }
+
+    if (response.ok) return response.json();
+
+    lastStatus = response.status;
+    const transient = [429, 502, 503, 504].includes(response.status);
+    if (!transient || i === retries - 1) {
+      throw new GeminiError(userMessageFor(response.status), {
+        status: response.status,
+        retryable: transient,
+      });
+    }
+    await wait(retryDelayMs(response, i, delay), options?.signal);
   }
-  throw new Error(`Falha após ${retries} tentativas. Status: ${lastResponse?.status}`);
+  throw new GeminiError(userMessageFor(lastStatus), { status: lastStatus, retryable: true });
 }
 
 function extractResponseText(result) {
