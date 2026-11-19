@@ -20,17 +20,19 @@ Requer Node.js.
 
 ```bash
 npm install
-echo "VITE_GEMINI_API_KEY=sua-chave" > .env.local   # não versione este arquivo
-npm run dev
+echo "GEMINI_API_KEY=sua-chave" > .env.local   # não versione este arquivo
+npx vercel dev   # serve o app e a função api/gemini.js localmente
 ```
 
 ## Segurança e privacidade
 
 - As conversas simuladas são enviadas à Gemini API para gerar as respostas. Não digite dados reais de
   pessoas.
-- A chave é lida de `VITE_GEMINI_API_KEY`. Variáveis `VITE_` ficam visíveis no código entregue ao
-  navegador, portanto, em uma publicação aberta, use uma chave restrita por domínio e por cota, ou
-  coloque um backend como intermediário. Nunca versione chaves.
+- A chave do Gemini fica no servidor: o navegador chama `/api/gemini` (função serverless em
+  `api/gemini.js`), que lê `GEMINI_API_KEY` das variáveis de ambiente da Vercel. A chave não entra no
+  código entregue ao cliente. Nunca versione chaves.
+- O proxy limita o tamanho da requisição, mas ainda não tem limite de uso por visitante; defina uma
+  cota no Google AI Studio.
 
 ## Limitações
 
