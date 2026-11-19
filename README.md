@@ -31,8 +31,20 @@ npx vercel dev   # serve o app e a função api/gemini.js localmente
 - A chave do Gemini fica no servidor: o navegador chama `/api/gemini` (função serverless em
   `api/gemini.js`), que lê `GEMINI_API_KEY` das variáveis de ambiente da Vercel. A chave não entra no
   código entregue ao cliente. Nunca versione chaves.
-- O proxy limita o tamanho da requisição, mas ainda não tem limite de uso por visitante; defina uma
-  cota no Google AI Studio.
+- O proxy limita o tamanho de cada requisição e o número de requisições por IP (20 por minuto, contagem
+  por instância serverless, portanto é um limite de melhor esforço). Defina também uma cota e um
+  alerta de gasto no Google AI Studio.
+
+## Uso simultâneo e resiliência
+
+Para vários usuários ao mesmo tempo, `api/gemini.js` tenta os modelos em ordem (padrão:
+`gemini-3.6-flash`, `gemini-2.5-flash`, `gemini-2.5-flash-lite`; configurável pela variável
+`GEMINI_MODELS`, separada por vírgulas). Em erro transitório (500/502/503/504) repete com espera
+exponencial e jitter; quando a cota de um modelo se esgota (429), pausa esse modelo por 60 s e usa o
+próximo; modelo inexistente (404) é ignorado. No navegador, `geminiService.js` repete falhas
+transitórias respeitando `Retry-After` e mostra mensagens em português. Esses comportamentos foram
+verificados com testes manuais contra um `fetch` simulado; o repositório ainda não tem testes
+automatizados.
 
 ## Limitações
 
