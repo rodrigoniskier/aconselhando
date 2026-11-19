@@ -15,7 +15,7 @@ const MODEL_ORDER = MODELS.length ? MODELS : DEFAULT_MODELS;
 
 const MAX_BODY_BYTES = 64 * 1024;
 const TOTAL_BUDGET_MS = 40_000; // abaixo de maxDuration (vercel.json)
-const ATTEMPT_TIMEOUT_MS = 20_000;
+const ATTEMPT_TIMEOUT_MS = 15_000;
 const ATTEMPTS_PER_MODEL = 2;
 const BASE_BACKOFF_MS = 500;
 const COOLDOWN_MS = 60_000;
@@ -120,6 +120,8 @@ export default async function handler(req, res) {
       } catch {
         clearTimeout(timer);
         last = { status: 504, text: JSON.stringify({ error: 'O serviço de IA demorou a responder.' }) };
+        // Timeout: não repete o mesmo modelo lento; passa ao próximo.
+        break;
       }
 
       if (attempt < ATTEMPTS_PER_MODEL - 1) {
